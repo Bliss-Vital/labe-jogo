@@ -79,7 +79,7 @@ const DESAFIOS = {
   'primeira-peca': {
     titulo: 'Seu primeiro componente',
     objetivo: 'Encaixe um **resistor de 220 Ω** na protoboard, com cada perna em uma coluna diferente.',
-    monitora: 'suzanne',
+    monitora: 'marta',
     intro: 'Clique no resistor de 220 Ω na gaveta e depois em dois furos da placa. Passe o mouse nos furos para ver quais estão ligados!',
     gaveta: { resistores: [220, 1000] },
     dicas: [
@@ -96,7 +96,7 @@ const DESAFIOS = {
   'primeiro-led': {
     titulo: 'Acenda um LED',
     objetivo: 'Faça um caminho do **+** da fonte, passando por um **resistor** e por um **LED**, até o **−**. Depois ligue a fonte.',
-    monitora: 'suzanne',
+    monitora: 'marta',
     intro: 'Dica de ouro: a trilha vermelha (+) e a azul (−) já estão ligadas na fonte. Use fios para levar a energia até as colunas onde estão as peças.',
     gaveta: { resistores: [220, 1000, 10000], leds: ['vermelho', 'verde', 'amarelo'], fios: true },
     dicas: [
@@ -111,7 +111,7 @@ const DESAFIOS = {
   serie: {
     titulo: 'Dois LEDs em série',
     objetivo: 'Acenda **dois LEDs em série**: um depois do outro, num caminho só, junto com um resistor.',
-    monitora: 'julia',
+    monitora: 'leticia',
     intro: 'Em série a corrente não tem escolha: ela passa pelo primeiro LED e depois pelo segundo. A perna curta de um encontra a perna longa do outro na mesma coluna.',
     gaveta: { resistores: [100, 220, 1000], leds: ['vermelho', 'verde', 'amarelo', 'azul'], fios: true },
     dicas: [
@@ -131,7 +131,7 @@ const DESAFIOS = {
   paralelo: {
     titulo: 'Dois LEDs em paralelo',
     objetivo: 'Acenda **dois LEDs em paralelo**: cada um com o seu próprio caminho entre o **+** e o **−**.',
-    monitora: 'julia',
+    monitora: 'suzanne',
     intro: 'Pense em duas “pontes” independentes ligando a trilha + à trilha −. O ideal é cada LED ter o seu próprio resistor.',
     gaveta: { resistores: [220, 1000], leds: ['vermelho', 'verde', 'amarelo', 'azul'], fios: true },
     dicas: [
