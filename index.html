@@ -7,74 +7,98 @@
 <meta name="description" content="Jogo das oficinas LABe — Mulheres no Laboratório de Eletrônica: aprenda eletrônica básica e monte circuitos na bancada.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Gochi+Hand&family=Nunito:wght@400;600;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="css/estilo.css">
 </head>
 <body>
 <div id="app">
 
-  <!-- ============================================================ tela inicial -->
-  <section id="tela-inicio" class="tela ativa" aria-label="Início">
-    <div class="inicio-deco" id="inicio-deco" aria-hidden="true"></div>
-    <div class="inicio-cartao">
-      <div class="logo" aria-label="LABe">LABe<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="15" r="11" fill="none" stroke="currentColor" stroke-width="4"/><path d="M14 15 H19 M22 15 H27 M24.5 12.5 V17.5 M20 26 V38 M14 32 H26" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></div>
+  <!-- ============================================================ apresentação -->
+  <section id="tela-apresentacao" class="tela tela-janela ativa" aria-label="Apresentação">
+    <div class="fundo-pixel" id="fundo-abertura" aria-hidden="true"></div>
+    <div class="janela janela-abertura">
+      <div class="logo" aria-label="LABe">LABe<svg viewBox="0 0 20 20" aria-hidden="true" shape-rendering="crispEdges" fill="currentColor"><rect x="7" y="1" width="6" height="2"/><rect x="5" y="3" width="2" height="6"/><rect x="13" y="3" width="2" height="6"/><rect x="7" y="9" width="6" height="2"/><rect x="9" y="4" width="2" height="4"/><rect x="8" y="5" width="4" height="2"/><rect x="9" y="11" width="2" height="7"/><rect x="6" y="13" width="8" height="2"/></svg></div>
       <p class="subtitulo">Mulheres no Laboratório de Eletrônica</p>
       <h1>O jogo da oficina</h1>
-      <p class="convite">Entre no laboratório, aprenda com as monitoras e monte seus primeiros circuitos na bancada. Não precisa de conhecimentos prévios!</p>
-      <form id="form-nome" class="campo-nome" autocomplete="off">
-        <label for="nome">Como você quer ser chamada?</label>
-        <input id="nome" name="nome" maxlength="20" placeholder="Seu nome" required>
-        <div class="inicio-acoes">
-          <button type="submit" class="btn btn-grande btn-rosa" id="btn-comecar">Entrar no laboratório</button>
-          <button type="button" class="btn btn-claro" id="btn-continuar" hidden>Continuar</button>
-        </div>
-      </form>
+      <p class="convite">Neste jogo você participa das oficinas do LABe. As monitoras explicam os conceitos de eletrônica básica, você responde desafios e monta circuitos de verdade numa bancada virtual. Não precisa saber nada antes!</p>
+      <ol class="passos-jogo">
+        <li><span class="passo-icone" data-icone="resistor"></span><span><strong>Escolha sua personagem</strong> e entre no laboratório.</span></li>
+        <li><span class="passo-icone" data-icone="multimetro"></span><span><strong>Converse com as monitoras</strong> e aprenda tensão, corrente, resistores e LEDs.</span></li>
+        <li><span class="passo-icone" data-icone="protoboard"></span><span><strong>Monte circuitos na bancada</strong>: acenda LEDs, ligue em série e em paralelo, meça com o multímetro.</span></li>
+        <li><span class="passo-icone" data-icone="led"></span><span><strong>Complete as 5 oficinas</strong> e ganhe seu certificado.</span></li>
+      </ol>
+      <div class="acoes-abertura">
+        <button type="button" class="btn btn-grande btn-rosa" id="btn-comecar">Começar</button>
+        <button type="button" class="btn btn-claro" id="btn-continuar" hidden>Continuar</button>
+      </div>
       <p class="creditos">Projeto de extensão LABe · UFABC</p>
     </div>
+  </section>
+
+  <!-- ============================================================ escolha da personagem -->
+  <section id="tela-escolha" class="tela tela-janela" aria-label="Escolha sua personagem">
+    <div class="fundo-pixel" id="fundo-escolha" aria-hidden="true"></div>
+    <form class="janela janela-escolha" id="form-escolha" autocomplete="off">
+      <h2>Escolha sua personagem</h2>
+      <div class="lista-personagens" id="lista-personagens" role="radiogroup" aria-label="Personagens"></div>
+      <div class="campo-nome">
+        <label for="nome">Como você quer ser chamada?</label>
+        <input id="nome" name="nome" maxlength="20" placeholder="Seu nome" required>
+      </div>
+      <div class="acoes-abertura">
+        <button type="submit" class="btn btn-grande btn-rosa">Entrar no laboratório</button>
+        <button type="button" class="btn-link" id="btn-voltar-abertura">Voltar</button>
+      </div>
+    </form>
   </section>
 
   <!-- ============================================================ oficinas -->
   <section id="tela-mapa" class="tela" aria-label="Oficinas">
     <header class="barra">
       <span class="titulo">LABe · Oficinas</span>
-      <button type="button" class="btn-icone btn-som">🔊</button>
+      <button type="button" class="btn-icone btn-som"><svg viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><rect x="1" y="5" width="3" height="6"/><rect x="4" y="4" width="2" height="8"/><rect x="6" y="2" width="2" height="12"/><g class="ondas"><rect x="10" y="5" width="2" height="6"/><rect x="13" y="3" width="2" height="10"/></g><g class="xis"><rect x="10" y="5" width="2" height="2"/><rect x="12" y="7" width="2" height="2"/><rect x="14" y="9" width="2" height="2"/><rect x="14" y="5" width="2" height="2"/><rect x="10" y="9" width="2" height="2"/></g></svg></button>
     </header>
     <div class="mapa-conteudo">
-      <h2 id="mapa-saudacao">Olá!</h2>
-      <p class="apresentacao">Cada oficina tem uma parte de conversa com as monitoras e uma parte de mão na massa na bancada. Complete uma para liberar a próxima.</p>
+      <div class="mapa-ola"><span id="mapa-avatar"></span><div><h2 id="mapa-saudacao">Olá!</h2>
+        <p class="apresentacao">Cada oficina tem uma conversa com as monitoras e uma parte de mão na massa na bancada. Complete uma para liberar a próxima.</p></div></div>
       <div id="lista-oficinas" class="lista-oficinas"></div>
       <div class="mapa-rodape">
         <button type="button" class="btn" id="btn-certificado" hidden>Ver meu certificado</button>
-        <button type="button" class="btn-link" id="btn-trocar">Trocar de jogadora / recomeçar do zero</button>
+        <button type="button" class="btn-link" id="btn-trocar-personagem">Trocar personagem</button>
+        <button type="button" class="btn-link" id="btn-trocar">Recomeçar do zero</button>
       </div>
     </div>
   </section>
 
   <!-- ============================================================ cena -->
   <section id="tela-cena" class="tela" aria-label="História">
-    <div id="cena-fundo" class="cena-fundo" aria-hidden="true"></div>
     <header class="barra">
-      <button type="button" class="btn-icone" id="btn-voltar-mapa" aria-label="Voltar para as oficinas" title="Voltar para as oficinas">☰</button>
+      <button type="button" class="btn-icone" id="btn-voltar-mapa" aria-label="Voltar para as oficinas" title="Voltar para as oficinas">≡</button>
       <span class="titulo" id="cena-titulo"></span>
-      <button type="button" class="btn-icone btn-som">🔊</button>
+      <button type="button" class="btn-icone btn-som"><svg viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><rect x="1" y="5" width="3" height="6"/><rect x="4" y="4" width="2" height="8"/><rect x="6" y="2" width="2" height="12"/><g class="ondas"><rect x="10" y="5" width="2" height="6"/><rect x="13" y="3" width="2" height="10"/></g><g class="xis"><rect x="10" y="5" width="2" height="2"/><rect x="12" y="7" width="2" height="2"/><rect x="14" y="9" width="2" height="2"/><rect x="14" y="5" width="2" height="2"/><rect x="10" y="9" width="2" height="2"/></g></svg></button>
     </header>
-    <div id="cena-personagem" class="cena-personagem oculto" aria-hidden="true"></div>
-    <div id="cena-ilustracao" class="cena-ilustracao" hidden></div>
+    <div class="cena-palco" id="cena-palco">
+      <canvas id="cena-canvas" aria-hidden="true"></canvas>
+      <div id="cena-ilustracao" class="cena-ilustracao" hidden></div>
+    </div>
     <div id="caixa-dialogo" class="caixa-dialogo" aria-live="polite">
-      <div id="dialogo-nome" class="dialogo-nome" hidden></div>
-      <div id="dialogo-texto" class="dialogo-texto"></div>
-      <div id="dialogo-opcoes" class="dialogo-opcoes"></div>
-      <div id="dialogo-feedback" class="dialogo-feedback" hidden></div>
-      <div id="dialogo-seta" class="dialogo-seta" hidden aria-hidden="true">clique para continuar ▼</div>
+      <div class="dialogo-retrato" id="dialogo-retrato" aria-hidden="true"></div>
+      <div class="dialogo-corpo">
+        <div id="dialogo-nome" class="dialogo-nome" hidden></div>
+        <div id="dialogo-texto" class="dialogo-texto"></div>
+        <div id="dialogo-opcoes" class="dialogo-opcoes"></div>
+        <div id="dialogo-feedback" class="dialogo-feedback" hidden></div>
+        <div id="dialogo-seta" class="dialogo-seta" hidden aria-hidden="true">clique para continuar ▼</div>
+      </div>
     </div>
   </section>
 
   <!-- ============================================================ bancada -->
   <section id="tela-bancada" class="tela" aria-label="Bancada">
     <header class="barra">
-      <button type="button" class="btn-icone" id="btn-sair-bancada" aria-label="Sair do desafio" title="Sair do desafio">☰</button>
+      <button type="button" class="btn-icone" id="btn-sair-bancada" aria-label="Sair do desafio" title="Sair do desafio">≡</button>
       <div class="bancada-objetivo" id="bancada-objetivo"></div>
-      <button type="button" class="btn-icone btn-som">🔊</button>
+      <button type="button" class="btn-icone btn-som"><svg viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><rect x="1" y="5" width="3" height="6"/><rect x="4" y="4" width="2" height="8"/><rect x="6" y="2" width="2" height="12"/><g class="ondas"><rect x="10" y="5" width="2" height="6"/><rect x="13" y="3" width="2" height="10"/></g><g class="xis"><rect x="10" y="5" width="2" height="2"/><rect x="12" y="7" width="2" height="2"/><rect x="14" y="9" width="2" height="2"/><rect x="14" y="5" width="2" height="2"/><rect x="10" y="9" width="2" height="2"/></g></svg></button>
     </header>
     <div class="bancada-corpo">
       <div class="bancada-area">
@@ -106,10 +130,12 @@
   </section>
 
   <!-- ============================================================ certificado -->
-  <section id="tela-certificado" class="tela" aria-label="Certificado">
-    <div class="certificado">
+  <section id="tela-certificado" class="tela tela-janela" aria-label="Certificado">
+    <div class="fundo-pixel" id="fundo-certificado" aria-hidden="true"></div>
+    <div class="janela certificado">
       <div class="logo">LABe</div>
       <h2>Certificado de conclusão do jogo</h2>
+      <span id="cert-avatar"></span>
       <p>Este certificado reconhece que</p>
       <div class="nome" id="cert-nome"></div>
       <p>completou todas as oficinas do jogo <strong>LABe — Mulheres no Laboratório de Eletrônica</strong>, montando e medindo circuitos na bancada virtual:</p>
@@ -121,6 +147,7 @@
 
 </div>
 <script src="js/arte.js"></script>
+<script src="js/pixel.js"></script>
 <script src="js/simulador.js"></script>
 <script src="js/historia.js"></script>
 <script src="js/desafios.js"></script>

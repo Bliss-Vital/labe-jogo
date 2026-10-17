@@ -124,7 +124,7 @@ const Bancada = (() => {
       <text x="94" y="128" font-size="13" font-weight="800" fill="#cfc8da" text-anchor="middle" letter-spacing="1">FONTE 5 V</text>
       <rect x="14" y="140" width="162" height="190" rx="12" fill="#26252c" stroke="#45434f" stroke-width="2"/>
       <rect x="28" y="156" width="134" height="76" rx="6" fill="#0c1410"/>
-      <text x="150" y="190" font-size="24" font-family="ui-monospace,Consolas,monospace" font-weight="700" fill="${corV}" text-anchor="end" class="${curto ? 'curto-pisca' : ''}">${vTxt}</text>
+      <text x="154" y="190" font-size="20" font-family="ui-monospace,Consolas,monospace" font-weight="700" fill="${corV}" text-anchor="end" class="${curto ? 'curto-pisca' : ''}">${vTxt}</text>
       <text x="150" y="220" font-size="17" font-family="ui-monospace,Consolas,monospace" fill="#69f0a5" text-anchor="end">${iTxt}</text>
       <g id="fonte-botao" style="cursor:pointer">
         <rect x="26" y="262" width="62" height="40" rx="9" fill="${ligada ? '#2fbf71' : '#5a5866'}" stroke="${ligada ? '#7ff0b0' : '#77758a'}" stroke-width="2"/>

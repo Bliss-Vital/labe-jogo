@@ -1,12 +1,9 @@
 /*
- * arte.js — todos os desenhos do jogo, feitos em SVG (sem imagens externas).
- * Personagens, cenários, ícones de componentes e ilustrações das aulas.
+ * arte.js — desenhos do jogo feitos em SVG: cenários (que o pixel.js pixeliza),
+ * ícones de componentes e ilustrações das aulas. As personagens ficam em img/.
  */
 const Arte = (() => {
   'use strict';
-  let uid = 0;
-  const novoId = prefixo => `${prefixo}-${++uid}`;
-
   // ---------------------------------------------------------------- cores
   const CORES = {
     preto: '#1b1b1b', marrom: '#7a4a24', vermelho: '#d62828', laranja: '#f77f00',
@@ -16,6 +13,7 @@ const Arte = (() => {
   const ORDEM = ['preto', 'marrom', 'vermelho', 'laranja', 'amarelo', 'verde', 'azul', 'violeta', 'cinza', 'branco'];
   const COR_LED = { vermelho: '#ff3b3b', verde: '#2ee66b', amarelo: '#ffd23f', azul: '#3d8bff', branco: '#f4f8ff' };
   const TINTA = '#3b1f5c';
+  const FONTE = "'Pixelify Sans',system-ui,sans-serif";
 
   const num = n => n.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
   function ohms(v) {
@@ -147,7 +145,7 @@ const Arte = (() => {
   function seta(x, y, angulo, cor = '#e5484d') {
     return `<path d="M-7 -6 L5 0 L-7 6 Z" transform="translate(${x} ${y}) rotate(${angulo})" fill="${cor}"/>`;
   }
-  const texto = (x, y, t, { tam = 16, cor = TINTA, peso = 600, ancora = 'middle', fam = "'Nunito',system-ui,sans-serif" } = {}) =>
+  const texto = (x, y, t, { tam = 16, cor = TINTA, peso = 500, ancora = 'middle', fam = FONTE } = {}) =>
     `<text x="${x}" y="${y}" font-size="${tam}" font-weight="${peso}" fill="${cor}" text-anchor="${ancora}" font-family="${fam}">${t}</text>`;
 
   // ---------------------------------------------------------------- ilustrações das aulas
@@ -201,13 +199,13 @@ const Arte = (() => {
     vri() {
       let s = `<path d="M150 22 L270 232 H30 Z" fill="#f3e6fb" stroke="${TINTA}" stroke-width="4" stroke-linejoin="round"/>
         <path d="M90 127 H210 M150 127 V232" stroke="${TINTA}" stroke-width="3"/>`;
-      s += texto(150, 108, 'V', { tam: 52, peso: 800, cor: '#d62828', fam: "'Fredoka',system-ui,sans-serif" });
-      s += texto(110, 205, 'R', { tam: 44, peso: 800, cor: '#8e44ad', fam: "'Fredoka',system-ui,sans-serif" });
-      s += texto(190, 205, 'I', { tam: 44, peso: 800, cor: '#2364d2', fam: "'Fredoka',system-ui,sans-serif" });
+      s += texto(150, 108, 'V', { tam: 52, peso: 800, cor: '#d62828', fam: FONTE });
+      s += texto(110, 205, 'R', { tam: 44, peso: 800, cor: '#8e44ad', fam: FONTE });
+      s += texto(190, 205, 'I', { tam: 44, peso: 800, cor: '#2364d2', fam: FONTE });
       s += texto(150, 175, '×', { tam: 22, peso: 800 });
       const linhas = [['V = R × I', 'tensão, em volts (V)', '#d62828'], ['I = V ÷ R', 'corrente, em ampères (A)', '#2364d2'], ['R = V ÷ I', 'resistência, em ohms (Ω)', '#8e44ad']];
       linhas.forEach(([f, d, c], i) => {
-        s += texto(330, 70 + i * 68, f, { tam: 30, peso: 700, ancora: 'start', fam: "'Fredoka',system-ui,sans-serif" });
+        s += texto(330, 70 + i * 68, f, { tam: 30, peso: 700, ancora: 'start', fam: FONTE });
         s += texto(330, 94 + i * 68, `descobre a ${d}`, { tam: 14, ancora: 'start', cor: c, peso: 700 });
       });
       return [600, 250, s];
@@ -218,7 +216,7 @@ const Arte = (() => {
       ORDEM.forEach((cor, i) => {
         const x = i < 5 ? 30 : 320, y = 14 + (i % 5) * 56;
         s += `<rect x="${x}" y="${y}" width="74" height="42" rx="8" fill="${CORES[cor]}" stroke="${cor === 'branco' ? '#bbb' : 'none'}" stroke-width="2"/>`;
-        s += texto(x + 37, y + 30, i, { tam: 24, peso: 800, cor: ['preto', 'marrom', 'azul', 'violeta', 'vermelho', 'verde', 'cinza'].includes(cor) ? '#fff' : '#222', fam: "'Fredoka',system-ui,sans-serif" });
+        s += texto(x + 37, y + 30, i, { tam: 24, peso: 800, cor: ['preto', 'marrom', 'azul', 'violeta', 'vermelho', 'verde', 'cinza'].includes(cor) ? '#fff' : '#222', fam: FONTE });
         s += texto(x + 92, y + 28, cor, { tam: 20, peso: 700, ancora: 'start' });
       });
       s += `<rect x="30" y="298" width="18" height="18" rx="4" fill="${CORES.dourado}"/>` + texto(56, 312, 'dourado = tolerância de ±5%', { tam: 14, ancora: 'start' });
@@ -337,7 +335,7 @@ const Arte = (() => {
     s += `<path d="M${xs[3]} ${cy - 40} L470 24" stroke="${TINTA}" stroke-width="1.5"/>` + texto(476, 22, 'tolerância', { tam: 14, ancora: 'start' });
     if (explicado) {
       const v = valorDasFaixas(f);
-      s += texto(300, 246, `${valores[0]}${valores[1]} ${valores[2]} = ${num(v)} Ω${v >= 1000 ? ` = ${ohms(v)}` : ''}`, { tam: 22, peso: 800, fam: "'Fredoka',system-ui,sans-serif" });
+      s += texto(300, 246, `${valores[0]}${valores[1]} ${valores[2]} = ${num(v)} Ω${v >= 1000 ? ` = ${ohms(v)}` : ''}`, { tam: 22, peso: 800, fam: FONTE });
     }
     return [600, explicado ? 262 : 222, s];
   }
@@ -349,59 +347,7 @@ const Arte = (() => {
     else if (ILUSTRACOES[id]) r = ILUSTRACOES[id]();
     else return '';
     const [w, h, s] = r;
-    return `<svg viewBox="0 0 ${w} ${h}" role="img" font-family="'Nunito',system-ui,sans-serif">${s}</svg>`;
-  }
-
-  // ---------------------------------------------------------------- personagens
-  function cachos(cx, cy, rx, ry, a0, a1, passo, r, cor) {
-    let s = '';
-    for (let a = a0; a <= a1; a += passo) {
-      const rad = a * Math.PI / 180;
-      s += `<circle cx="${(cx + rx * Math.cos(rad)).toFixed(1)}" cy="${(cy + ry * Math.sin(rad)).toFixed(1)}" r="${r}" fill="${cor}"/>`;
-    }
-    return s;
-  }
-
-  function retrato(ap) {
-    const id = novoId('r');
-    const { pele, cabelo, estilo, camisa } = ap;
-    let tras = '', frente = '';
-    if (estilo === 'cacheado') {
-      tras = `<ellipse cx="100" cy="122" rx="64" ry="74" fill="${cabelo}"/>` +
-        cachos(100, 118, 60, 70, 150, 390, 20, 17, cabelo) +
-        [140, 165, 190].map(y => `<circle cx="46" cy="${y}" r="18" fill="${cabelo}"/><circle cx="154" cy="${y}" r="18" fill="${cabelo}"/>`).join('');
-      frente = cachos(100, 66, 38, 12, 180, 360, 22, 13, cabelo);
-    } else if (estilo === 'black') {
-      tras = `<circle cx="100" cy="88" r="70" fill="${cabelo}"/>` + cachos(100, 88, 68, 66, 0, 350, 22, 13, cabelo);
-      frente = `<path d="M58 102 Q58 56 100 54 Q142 56 142 102 Q132 76 100 74 Q68 76 58 102 Z" fill="${cabelo}"/>`;
-    } else {
-      tras = `<defs><linearGradient id="${id}-c" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" stop-color="${cabelo}"/><stop offset="1" stop-color="${ap.pontas || cabelo}"/></linearGradient></defs>
-        <path d="M50 112 Q46 50 100 48 Q154 50 150 112 L156 182 Q100 194 44 182 Z" fill="url(#${id}-c)"/>`;
-      frente = `<path d="M57 106 Q55 56 100 54 Q145 56 143 106 Q139 82 122 78 Q108 92 84 82 Q64 84 57 106 Z" fill="${cabelo}"/>`;
-    }
-    const oculos = ap.oculos ? `<g fill="none" stroke="#2a1a3a" stroke-width="3"><rect x="69" y="100" width="27" height="21" rx="9"/><rect x="104" y="100" width="27" height="21" rx="9"/><path d="M96 109 Q100 105 104 109"/></g>` : '';
-    const cracha = ap.cracha ? `<path d="M86 186 L96 222 M114 186 L104 222" stroke="#2e8b57" stroke-width="3"/><rect x="88" y="218" width="24" height="19" rx="3" fill="#e9f5ef" stroke="#2e8b57" stroke-width="2"/><rect x="92" y="222" width="8" height="8" fill="#9bc7ae"/>` : '';
-    const logo = ap.logo ? `<text x="100" y="226" text-anchor="middle" font-family="'Fredoka',system-ui,sans-serif" font-weight="700" font-size="17" fill="${ap.corLogo || '#fff'}">LABe</text>` : '';
-    const brincos = ap.brincos ? '<circle cx="58" cy="128" r="4" fill="#f2c94c"/><circle cx="142" cy="128" r="4" fill="#f2c94c"/>' : '';
-    return `<svg viewBox="0 0 200 240" class="retrato-svg" aria-hidden="true">
-      ${tras}
-      <path d="M16 240 Q20 190 72 182 L128 182 Q180 190 184 240 Z" fill="${camisa}"/>
-      <rect x="86" y="146" width="28" height="42" rx="12" fill="${pele}"/>
-      <path d="M86 170 Q100 182 114 170 V160 H86 Z" fill="#000" opacity=".12"/>
-      <ellipse cx="58" cy="116" rx="7" ry="10" fill="${pele}"/><ellipse cx="142" cy="116" rx="7" ry="10" fill="${pele}"/>
-      ${brincos}
-      <ellipse cx="100" cy="108" rx="42" ry="50" fill="${pele}"/>
-      ${frente}
-      <path d="M74 96 Q83 90 92 95 M108 95 Q117 90 126 96" stroke="#2a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/>
-      <g class="olhos"><ellipse cx="83" cy="111" rx="4.6" ry="6" fill="#2a1a1a"/><ellipse cx="117" cy="111" rx="4.6" ry="6" fill="#2a1a1a"/>
-        <circle cx="84.6" cy="109" r="1.6" fill="#fff"/><circle cx="118.6" cy="109" r="1.6" fill="#fff"/></g>
-      <circle cx="74" cy="128" r="7" fill="#ff7aa8" opacity=".3"/><circle cx="126" cy="128" r="7" fill="#ff7aa8" opacity=".3"/>
-      <path class="boca-sorriso" d="M88 134 Q100 145 112 134" stroke="#7a2c3c" stroke-width="3.2" fill="none" stroke-linecap="round"/>
-      <ellipse class="boca-fala" cx="100" cy="137" rx="8" ry="6" fill="#7a2c3c"/>
-      ${oculos}
-      ${cracha}
-      ${logo}
-    </svg>`;
+    return `<svg viewBox="0 0 ${w} ${h}" role="img" shape-rendering="crispEdges" font-family="${FONTE}">${s}</svg>`;
   }
 
   // ---------------------------------------------------------------- cenários
@@ -528,6 +474,6 @@ const Arte = (() => {
 
   return {
     CORES, ORDEM, COR_LED, ohms, faixasDoValor, valorDasFaixas,
-    resistorSVG, ledLateral, icone, ilustracao, retrato, fundo,
+    resistorSVG, ledLateral, icone, ilustracao, fundo,
   };
 })();

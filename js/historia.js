@@ -5,6 +5,8 @@
  *
  *   { quem: 'bia', texto: 'Oi, {nome}!' }            fala (clique para avançar)
  *       quem: id de PERSONAGENS, 'voce' (a jogadora) ou 'narrador'
+ *       a monitora que fala aparece na cena; na narração ela continua lá
+ *   sozinha: true                                    tira a monitora da cena (ex.: no corredor)
  *       no texto: {nome} vira o nome da jogadora, **negrito** destaca palavras
  *   ilustracao: 'agua'                               mostra uma ilustração (veja arte.js);
  *                                                    ela fica na tela até outra ou ilustracao: null
@@ -17,19 +19,11 @@
  *   { tipo: 'desafio', id: 'primeiro-led' }           abre a bancada (veja desafios.js)
  */
 
+// sprite: número do quadro em img/monitoras.png (desenhado em fotos/personagens/monitoras.piskel)
 const PERSONAGENS = {
-  helena: {
-    nome: 'Profª Helena', cor: '#3d1f5f',
-    aparencia: { pele: '#e0a682', cabelo: '#2b1b2e', estilo: 'cacheado', oculos: true, camisa: '#2d2536', cracha: true },
-  },
-  bia: {
-    nome: 'Bia', cor: '#7b3fb0',
-    aparencia: { pele: '#7b4a2d', cabelo: '#1d1210', estilo: 'black', camisa: '#7b3fb0', logo: true, brincos: true },
-  },
-  nina: {
-    nome: 'Nina', cor: '#b0458a',
-    aparencia: { pele: '#f2d0b8', cabelo: '#17121c', pontas: '#3b9be0', estilo: 'liso', oculos: true, camisa: '#dcaaf0', logo: true, corLogo: '#3d1f5f' },
-  },
+  helena: { nome: 'Profª Helena', cor: '#3d1f5f', sprite: 0 },
+  bia: { nome: 'Bia', cor: '#7b3fb0', sprite: 1 },
+  nina: { nome: 'Nina', cor: '#b0458a', sprite: 2 },
 };
 
 const OFICINAS = [
@@ -38,7 +32,7 @@ const OFICINAS = [
     titulo: 'Bem-vinda ao laboratório',
     resumo: 'Conheça a bancada, as monitoras e três palavras que vão te acompanhar: tensão, corrente e resistência.',
     passos: [
-      { cenario: 'corredor', quem: 'narrador', texto: 'Sábado, 9 horas da manhã. Você chega ao bloco de laboratórios da universidade.' },
+      { cenario: 'corredor', sozinha: true, quem: 'narrador', texto: 'Sábado, 9 horas da manhã. Você chega ao bloco de laboratórios da universidade.' },
       { quem: 'narrador', texto: 'Na porta do laboratório 405-1 tem um cartaz roxo: **LABe — Mulheres no Laboratório de Eletrônica**.' },
       { quem: 'voce', texto: 'É aqui! Eu nunca mexi com circuitos... mas vim justamente para aprender.' },
       { cenario: 'laboratorio', quem: 'helena', texto: 'Bom dia! Seja muito bem-vinda ao LABe! Eu sou a Helena, professora que coordena o projeto.' },

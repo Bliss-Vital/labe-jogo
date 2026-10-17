@@ -3,3 +3,9 @@ Thumbs.db
 desktop.ini
 .vscode/
 .claude/
+__pycache__/
+
+# material de referência que não faz parte do jogo
+conteudo/
+fotos/fotos das oficinas/
+fotos/*.webp
