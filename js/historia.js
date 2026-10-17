@@ -273,7 +273,7 @@ const OFICINAS = [
     passos: [
       { cenario: 'laboratorio', quem: 'alejandra', texto: 'Oi, {nome}! Nessa aula vamos aprender sobre **motores elétricos**. Mas antes, as meninas vão falar um pouco sobre o grupo de robótica!' },
       { quem: 'julia-robotica', grupo: ['aline-robotica', 'leticia-robotica', 'julia-robotica'], texto: 'Além do projeto LABe, fazemos parte da equipe de robótica **Project Neon**, e hoje vamos aprender mais sobre motores elétricos, alguns que usamos também em nossos robôs! Sigam a nossa equipe no Instagram: **@projectneon**' },
-      { quem: 'alejandra', grupo: null, texto: 'Obrigada, meninas! Até agora a eletricidade acendeu luzes. Hoje ela vai fazer as coisas **se mexerem**!' },
+      { quem: 'aline-robotica', texto: 'Até agora a eletricidade acendeu luzes. Hoje ela vai fazer as coisas **se mexerem**!' },
       { quem: 'marta', ilustracao: 'motor', texto: 'Separei um **motor de corrente contínua** para cada bancada. É o mesmo tipo que tem em carrinhos de brinquedo, ventiladores e robôs.' },
       { quem: 'marta', texto: 'O motor transforma **energia elétrica** em **movimento**: quando passa corrente por ele, o **eixo** gira, e a hélice gira junto.' },
       { quem: 'marta', ilustracao: 'motor-dentro', texto: 'Por dentro ele tem **ímãs** e uma **bobina**, que é um fio de cobre enrolado muitas vezes. Quando passa corrente, a bobina vira um **eletroímã**.' },
