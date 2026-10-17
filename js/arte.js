@@ -394,6 +394,22 @@ const Arte = (() => {
       return [600, 260, painel(10, true) + painel(310, false)];
     },
 
+    // PWM: três ondas com 25%, 50% e 75% do tempo ligado e a média de cada uma
+    pwm() {
+      let s = '';
+      [[0.25, 'devagar'], [0.5, 'metade'], [0.75, 'rápido']].forEach(([d, rot], i) => {
+        const y = 24 + i * 92, x0 = 130, per = 110, alto = y, baixo = y + 46;
+        let p = `M${x0} ${baixo}`;
+        for (let k = 0; k < 4; k++) { const xa = x0 + k * per; p += ` V${alto} H${xa + per * d} V${baixo} H${xa + per}`; }
+        s += `<path d="${p}" fill="none" stroke="#1f9d5c" stroke-width="4"/>`;
+        s += `<path d="M${x0} ${baixo - 46 * d} H${x0 + 4 * per}" stroke="#e5484d" stroke-width="3" stroke-dasharray="8 6"/>`;
+        s += texto(62, y + 24, `${d * 100}%`, { tam: 28, peso: 700, cor: '#1f9d5c' });
+        s += texto(62, y + 46, rot, { tam: 15 });
+      });
+      s += texto(130, 300, 'verde: liga e desliga · tracejado: a média, que é a velocidade', { tam: 14, peso: 600, ancora: 'start' });
+      return [600, 312, s];
+    },
+
     buzzer() {
       let s = `<g transform="translate(150 150) scale(2.2)"><path d="M-10 18 V48 M10 18 V40" stroke="#9aa0a6" stroke-width="3"/>
         <rect x="-26" y="-26" width="52" height="46" rx="6" fill="#1b1b1b"/><ellipse cx="0" cy="-26" rx="26" ry="8" fill="#333"/><circle cx="0" cy="-26" r="4" fill="#666"/>

@@ -205,6 +205,27 @@ h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .0
 .dialogo-feedback.certo { background: var(--ok-claro); color: #145c37; }
 .dialogo-feedback.errado { background: var(--erro-claro); color: #8f1f2a; }
 
+/* minijogo: você é o PWM (pista e gráfico são canvas pequenos ampliados) */
+.pwm { display: flex; flex-direction: column; gap: 8px; }
+.pwm-topo { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; font-weight: 600; }
+.pwm-topo b { color: var(--roxo); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.pwm-pista, .pwm-grafico { display: block; height: auto; align-self: center; image-rendering: pixelated; image-rendering: crisp-edges; }
+.pwm-pista { width: min(100%, 74cqh); border: 3px solid var(--tinta); }
+.pwm-grafico { width: min(100%, 87cqh); border: 3px solid #0a1417; }
+.pwm-medidor { position: relative; height: 20px; margin: 2px 0 16px; background: #ece4f3; border: 3px solid var(--tinta); }
+.pwm-faixa { position: absolute; top: 0; bottom: 0; background: #8de0a8; }
+.pwm-agulha { position: absolute; top: -7px; bottom: -7px; width: 4px; margin-left: -2px; background: var(--rosa-escuro); }
+.pwm-marca { position: absolute; top: 100%; margin-top: 4px; transform: translateX(-50%); font-size: .75rem; color: var(--tinta-suave); }
+.pwm-marca:first-of-type { transform: none; }
+.pwm-marca:last-of-type { transform: translateX(-100%); }
+.pwm-dica { margin: 0; min-height: 1.4em; font-weight: 600; color: var(--tinta); }
+.pwm-dica.certo { color: var(--ok); }
+.pwm-progresso { height: 12px; background: #fff; border: 3px solid var(--tinta); }
+.pwm-progresso i { display: block; height: 100%; width: 0; background: var(--ok); }
+.pwm-botao { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.pwm-botao.apertado { background: var(--ok); transform: translateY(2px); box-shadow: inset 4px 4px 0 rgba(0, 0, 0, .3); }
+.pwm-legenda, .pwm-ajuda { margin: 0; font-size: .8rem; color: var(--tinta-suave); }
+
 /* minijogo: monte o resistor */
 .monta-resistor { display: flex; flex-direction: column; gap: 12px; align-items: center; }
 .monta-resistor > svg { max-height: 26cqh; }

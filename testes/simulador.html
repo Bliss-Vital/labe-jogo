@@ -7,6 +7,7 @@
 <script src="../js/simulador.js"></script>
 <script src="../js/desafios.js"></script>
 <script src="../js/arduino.js"></script>
+<script src="../js/pwm.js"></script>
 <script src="../js/historia.js"></script>
 <script>
   // Nos testes, o nome do furo é o próprio nó; "S1#a" e "S1#b" são dois furos da mesma coluna.
@@ -211,6 +212,47 @@
     for (const [id, d] of Object.entries(DESAFIOS)) if (!PERSONAGENS[d.monitora]) erros.push(`desafio ${id}: monitora '${d.monitora}'`);
     afirmar(!erros.length, erros.join('; '));
     return `${OFICINAS.length} oficinas`;
+  });
+
+  // ---------------------------------------------------------------- minijogo do PWM
+  // roda o minijogo quadro a quadro (60 por segundo), apertando conforme apertado(t)
+  function jogarPWM(apertado, segundos = 10) {
+    const rafOriginal = window.requestAnimationFrame;
+    let proximo = null, venceu = null;
+    window.requestAnimationFrame = cb => { proximo = cb; return 1; };
+    const painel = document.createElement('div');
+    MinijogoPWM.iniciar(painel, { faixa: [40, 60], segundos: 4, aoVencer: info => { if (!venceu) venceu = Object.assign({ t }, info); } });
+    let t = 0, antes = false;
+    const t0 = performance.now();
+    for (; t < segundos && proximo; t += 1 / 60) {
+      const agora = apertado(t);
+      if (agora !== antes) document.dispatchEvent(new KeyboardEvent(agora ? 'keydown' : 'keyup', { key: ' ' }));
+      antes = agora;
+      const cb = proximo; proximo = null;
+      cb(t0 + t * 1000);
+    }
+    const velocidade = parseInt(painel.querySelector('.pwm-vel').textContent, 10);
+    MinijogoPWM.parar();
+    window.requestAnimationFrame = rafOriginal;
+    return { venceu, velocidade };
+  }
+  teste('PWM: toques no ritmo de 50% vencem com ciclo perto de 50%', () => {
+    const r = jogarPWM(t => (t % 0.32) < 0.16);
+    afirmar(r.venceu && Math.abs(r.venceu.ciclo - 50) <= 8, JSON.stringify(r));
+    return `venceu em ${r.venceu.t.toFixed(1)} s, ciclo ${r.venceu.ciclo}%`;
+  });
+  teste('PWM: segurando direto vai a 100% e não vence', () => {
+    const r = jogarPWM(() => true);
+    afirmar(!r.venceu && r.velocidade >= 95, JSON.stringify(r));
+  });
+  teste('PWM: sem apertar o carrinho fica parado', () => {
+    const r = jogarPWM(() => false, 5);
+    afirmar(!r.venceu && r.velocidade === 0, JSON.stringify(r));
+  });
+  teste('PWM: toques curtos (20%) deixam devagar demais', () => {
+    const r = jogarPWM(t => (t % 0.3) < 0.06);
+    afirmar(!r.venceu && r.velocidade < 40, JSON.stringify(r));
+    return `${r.velocidade}%`;
   });
 
   const falhas = resultados.filter(r => r.startsWith('FALHA')).length;

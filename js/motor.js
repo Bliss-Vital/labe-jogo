@@ -208,6 +208,7 @@ const Som = (() => {
   function abrirMapa() {
     fecharModal();
     Bancada.parar();
+    MinijogoPWM.parar();
     $('#mapa-saudacao').textContent = `Olá, ${estado.nome}!`;
     $('#mapa-avatar').innerHTML = spriteJogadora(2);
     const lista = $('#lista-oficinas');
@@ -333,7 +334,7 @@ const Som = (() => {
       if (p.cenario) cen = p.cenario;
       elencoDoPasso(p);
       if ('ilustracao' in p) ilu = p.ilustracao;
-      if (p.tipo === 'resistor' || p.tipo === 'desafio') ilu = null;
+      if (p.tipo === 'resistor' || p.tipo === 'desafio' || p.tipo === 'pwm') ilu = null;
     }
     const primeiro = o.passos[passoInicial];
     definirCenario(primeiro && primeiro.cenario ? primeiro.cenario : cen);
@@ -350,6 +351,7 @@ const Som = (() => {
     if ('ilustracao' in p) definirIlustracao(p.ilustracao);
     if (p.tipo === 'quiz') mostrarQuiz(p);
     else if (p.tipo === 'resistor') mostrarMontaResistor(p);
+    else if (p.tipo === 'pwm') mostrarPWM(p);
     else if (p.tipo === 'desafio') abrirDesafio(p);
     else if (p.texto) { falar(p.quem, formatar(p.texto)); cena.esperando = 'clique'; }
     else avancar();
@@ -473,6 +475,32 @@ const Som = (() => {
     falar(p.quem, formatar(p.texto), () => {});
   }
 
+  // ---------------------------------------------------------------- minijogo: você é o PWM
+  function mostrarPWM(p) {
+    cena.esperando = 'pwm';
+    cena.ilustracao = 'pwm';
+    const painel = $('#cena-ilustracao');
+    painel.onclick = null;
+    painel.hidden = false;
+    painel.classList.add('alta');
+    MinijogoPWM.iniciar(painel, {
+      faixa: p.faixa, segundos: p.segundos,
+      aoVencer: info => {
+        Som.tocar('certo');
+        estado.vars.cicloPWM = String(info.ciclo);
+        salvar();
+        const fb = $('#dialogo-feedback');
+        fb.hidden = false;
+        fb.className = 'dialogo-feedback certo';
+        fb.innerHTML = '✔ ' + formatar(p.sucesso || 'Isso é PWM!');
+        $('#dialogo-seta').hidden = false;
+        cena.esperando = 'clique';
+        cena.aoAvancar = () => { MinijogoPWM.parar(); definirIlustracao(null); };
+      },
+    });
+    falar(p.quem, formatar(p.texto), () => {});
+  }
+
   // ---------------------------------------------------------------- desafios na bancada
   const bancada = { desafio: null, concluido: false, dica: 0, autoAtiva: false };
 
@@ -573,7 +601,7 @@ const Som = (() => {
   // ---------------------------------------------------------------- eventos gerais
   $('#tela-cena').addEventListener('click', ev => {
     if (ev.target.closest('button, input, .barra')) return;
-    if (ev.target.closest('#cena-ilustracao') && cena.esperando === 'resistor') return;
+    if (ev.target.closest('#cena-ilustracao') && (cena.esperando === 'resistor' || cena.esperando === 'pwm')) return;
     tocarAvanco();
   });
   document.addEventListener('keydown', ev => {

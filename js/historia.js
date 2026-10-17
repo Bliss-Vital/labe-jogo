@@ -18,6 +18,8 @@
  *       as opções aparecem embaralhadas; "resposta" é o comentário depois do clique
  *       opções com icone: 'resistor' | 'led' | 'capacitor' | 'multimetro' | 'fonte' | 'protoboard' | 'arduino' | 'buzzer' | 'motor'
  *   { tipo: 'resistor', quem, texto, alvo: 4700 }     minijogo de montar o resistor pelas cores
+ *   { tipo: 'pwm', quem, texto, faixa: [40, 60], segundos: 4, sucesso }
+ *                                                    minijogo do PWM: segurar = motor ligado; {cicloPWM} = % ligado
  *   { tipo: 'desafio', id: 'primeiro-led' }           abre a bancada (veja desafios.js)
  */
 
@@ -305,6 +307,23 @@ const OFICINAS = [
       { quem: 'julia-robotica', ilustracao: null, texto: 'Desafio: faça o motor girar **mais devagar** usando um resistor.' },
       { tipo: 'desafio', id: 'motor-devagar' },
       { quem: 'julia-robotica', texto: 'Com o resistor de **{resistorMotor}**, sobraram **{tensaoMotor} V** para o motor. E com um resistor grande demais, ele nem consegue sair do lugar!' },
+      { quem: 'leticia-robotica', ilustracao: 'pwm', texto: 'Nos nossos robôs a gente quase não usa resistor para mudar a velocidade: ele esquenta e desperdiça energia. A gente usa **PWM**!' },
+      { quem: 'leticia-robotica', texto: 'No PWM o motor recebe a tensão toda, mas fica **ligando e desligando** bem rápido. Como ele tem inércia, não dá tempo de parar: ele gira numa velocidade média.' },
+      { quem: 'aline-robotica', texto: 'A porcentagem do tempo em que ele fica ligado se chama **ciclo de trabalho** (duty cycle). Com 0% ele fica parado, com 100% vai na velocidade máxima.' },
+      {
+        tipo: 'pwm', quem: 'julia-robotica', ilustracao: null, faixa: [40, 60], segundos: 4,
+        texto: 'Agora você é o PWM! **Segure** o botão para ligar o motor e **solte** para desligar. Dê toques no ritmo certo para deixar o carrinho entre **40% e 60%** da velocidade.',
+        sucesso: 'Você deixou o motor ligado uns **{cicloPWM}%** do tempo, e o carrinho andou na metade da velocidade. Isso é PWM!',
+      },
+      { quem: 'julia-robotica', texto: 'O Arduino faz exatamente isso, só que umas **490 vezes por segundo**, com o comando **analogWrite**. Na oficina de Arduino você vai ver: os pinos com **~** são os que fazem PWM.' },
+      {
+        tipo: 'quiz', quem: 'aline-robotica', pergunta: 'Com PWM de **25%**, o motor:',
+        opcoes: [
+          { texto: 'Fica ligado 25% do tempo e gira devagar', certa: true, resposta: 'Isso! Ligado um quarto do tempo, ele anda mais ou menos a um quarto da velocidade.' },
+          { texto: 'Recebe só 25% da tensão o tempo todo', resposta: 'Essa é a ideia do resistor! No PWM a tensão é sempre a toda; o que muda é o tempo ligado.' },
+          { texto: 'Gira por 25 segundos e para', resposta: 'O PWM liga e desliga muitas vezes por segundo, sem parar. Os 25% são a parte do tempo em que ele fica ligado.' },
+        ],
+      },
       {
         tipo: 'quiz', quem: 'alejandra', pergunta: 'Um pino do Arduino fornece só uns **20 mA**. Dá para ligar o motor direto nele?',
         opcoes: [
