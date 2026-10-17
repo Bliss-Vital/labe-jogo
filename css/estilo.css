@@ -99,7 +99,7 @@ h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .0
 .creditos { margin: 0; font-size: .85rem; color: var(--tinta-suave); }
 
 .janela-escolha h2 { font-size: 1.8rem; color: var(--roxo); }
-.lista-personagens { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; }
+.lista-personagens { display: grid; grid-template-columns: repeat(3, max-content); justify-content: center; gap: 10px; width: 100%; }
 .opcao-personagem {
   background: var(--lilas-claro); border: var(--px) solid var(--lilas); padding: 8px 6px 4px; display: grid; justify-items: center;
 }
@@ -344,6 +344,11 @@ h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .0
   .caixa-dialogo { gap: 10px; padding: 12px 12px 26px; width: calc(100% - 24px); margin: 10px auto 12px; }
   .dialogo-texto { font-size: 1.05rem; }
   .barra .titulo { font-size: .95rem; }
+}
+@media (max-width: 460px) {
+  /* 3 personagens por linha também no celular: o desenho fica 2× em vez de 3× (pixels inteiros) */
+  .lista-personagens { gap: 8px; }
+  .opcao-personagem .sprite { zoom: calc(2 / 3); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
