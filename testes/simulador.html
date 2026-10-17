@@ -7,6 +7,7 @@
 <script src="../js/simulador.js"></script>
 <script src="../js/desafios.js"></script>
 <script src="../js/arduino.js"></script>
+<script src="../js/historia.js"></script>
 <script>
   // Nos testes, o nome do furo é o próprio nó; "S1#a" e "S1#b" são dois furos da mesma coluna.
   const noBase = id => id.split('#')[0];
@@ -151,6 +152,64 @@
     const d = dicaArduino({ arduino: { rodando: true, programa: Arduino.programa, pinos: Arduino.pinos } }, 13);
     Arduino.parar(false);
     afirmar(d && /pinMode/.test(d.texto), d ? d.texto : 'sem dica');
+  });
+  // ---------------------------------------------------------------- motor
+  const M = (a, b) => ({ tipo: 'motor', a, b });
+  teste('motor direto na fonte gira no sentido horário com ~200 mA', () => {
+    const r = sim(pecas([M('TP', 'TN')]));
+    const m = r.motores[0];
+    afirmar(m.girando && m.sentido === 1 && m.velocidade > 0.99, JSON.stringify({ sentido: m.sentido, v: m.velocidade }));
+    afirmar(Math.abs(m.corrente - 0.2) < 0.002 && Math.abs(r.correnteFonte - m.corrente) < 1e-5, mA(m.corrente));
+    return `${mA(m.corrente)}, ${Math.round(m.rpm)} rpm`;
+  });
+  teste('motor invertido gira no sentido anti-horário', () => {
+    const m = sim(pecas([M('TN', 'TP')])).motores[0];
+    afirmar(m.girando && m.sentido === -1, 'sentido ' + m.sentido);
+  });
+  teste('resistor em série deixa o motor mais devagar; 220 Ω faz ele parar', () => {
+    const v10 = sim(pecas([R('TP', 'S1', 10), M('S1', 'TN')])).motores[0];
+    const v47 = sim(pecas([R('TP', 'S1', 47), M('S1', 'TN')])).motores[0];
+    const p = pecas([R('TP', 'S1', 220), M('S1', 'TN')]);
+    const v220 = sim(p).motores[0];
+    afirmar(v10.girando && v47.girando && v47.velocidade < v10.velocidade && v10.velocidade < 0.85, `${v10.velocidade} ${v47.velocidade}`);
+    afirmar(!v220.girando && v220.tensao > 0.05, 'tensão ' + v220.tensao);
+    const d = dicaAutomatica(ctx(p), DESAFIOS['motor-devagar']);
+    afirmar(d && /atrito/.test(d.texto), d ? d.texto : 'sem dica');
+    return `10 Ω: ${v10.tensao.toFixed(2)} V, 47 Ω: ${v47.tensao.toFixed(2)} V, 220 Ω: ${v220.tensao.toFixed(2)} V`;
+  });
+  teste('desafio "mais devagar": série vale, resistor em paralelo não', () => {
+    const d = DESAFIOS['motor-devagar'];
+    const serie = ctx(pecas([R('TP', 'S1', 10), M('S1', 'TN')]));
+    const paralelo = ctx(pecas([R('TP', 'TN', 47), M('TP', 'TN')]));
+    afirmar(d.verificar(serie) && !d.verificar(paralelo), 'verificar errado');
+    afirmar(/paralelo/.test(d.dicaAoVivo(paralelo).texto), 'sem dica de paralelo');
+    const vars = d.aoConcluir(serie);
+    afirmar(vars.resistorMotor === '10 Ω', JSON.stringify(vars));
+    return JSON.stringify(vars);
+  });
+  teste('desafio "inverta o sentido" só vale com o motor girando ao contrário', () => {
+    DESAFIOS['liga-motor'].aoConcluir(ctx(pecas([M('TP', 'TN')])));
+    const d = DESAFIOS['inverte-motor'];
+    afirmar(!d.verificar(ctx(pecas([M('TP', 'TN')]))) && d.verificar(ctx(pecas([M('TN', 'TP')]))), 'verificar errado');
+  });
+  teste('circuito do motor aberto avisa; com o motor em curto ele não gira', () => {
+    const d = dicaAutomatica(ctx(pecas([M('S1', 'TN')])), DESAFIOS['liga-motor']);
+    afirmar(d && /aberto/.test(d.texto), d ? d.texto : 'sem dica');
+    const m = sim(pecas([F('TP', 'S1'), M('S1', 'S2'), F('S1', 'S2'), F('S2', 'TN')])).motores[0];
+    afirmar(!m.girando, 'girou');
+  });
+
+  // ---------------------------------------------------------------- roteiro
+  teste('roteiro: falas, desafios e ilustrações existem', () => {
+    const erros = [];
+    for (const o of OFICINAS) for (const p of o.passos) {
+      if (p.quem && !['voce', 'narrador'].includes(p.quem) && !PERSONAGENS[p.quem]) erros.push(`${o.id}: quem '${p.quem}'`);
+      if (p.tipo === 'desafio' && !DESAFIOS[p.id]) erros.push(`${o.id}: desafio '${p.id}'`);
+      if (p.ilustracao && !Arte.ilustracao(p.ilustracao)) erros.push(`${o.id}: ilustração '${p.ilustracao}'`);
+    }
+    for (const [id, d] of Object.entries(DESAFIOS)) if (!PERSONAGENS[d.monitora]) erros.push(`desafio ${id}: monitora '${d.monitora}'`);
+    afirmar(!erros.length, erros.join('; '));
+    return `${OFICINAS.length} oficinas`;
   });
 
   const falhas = resultados.filter(r => r.startsWith('FALHA')).length;

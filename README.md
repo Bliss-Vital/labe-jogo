@@ -4,8 +4,9 @@ Jogo online das oficinas do **LABe — Mulheres no Laboratório de Eletrônica**
 
 É um jogo em **pixel art**: a participante escolhe a personagem, entra no laboratório, conversa com as
 monitoras, responde perguntas e monta circuitos de verdade numa **bancada virtual**: protoboard, fonte
-de 5 V, resistores, LEDs, fios, multímetro e um **Arduino UNO** programável. O simulador calcula tensões
-e correntes: o LED acende, fica fraquinho, ou **queima** se faltar o resistor.
+de 5 V, resistores, LEDs, fios, multímetro, um **motor CC** e um **Arduino UNO** programável. O simulador
+calcula tensões e correntes: o LED acende, fica fraquinho, ou **queima** se faltar o resistor; o motor
+gira mais rápido ou mais devagar conforme a tensão, no sentido que a corrente manda.
 
 ## Oficinas
 
@@ -14,7 +15,9 @@ e correntes: o LED acende, fica fraquinho, ou **queima** se faltar o resistor.
 3. **Protoboard e o primeiro LED**: como os furos se conectam, polaridade do LED, primeiro circuito.
 4. **Série e paralelo**: dois LEDs de cada jeito, na bancada.
 5. **Medindo com o multímetro**: medir a tensão no LED e no resistor e calcular a corrente.
-6. **Arduino: primeiros passos**: o que é o Arduino, pinout, `setup()` e `loop()`, e as práticas
+6. **Motores elétricos**: como o motor CC funciona (ímãs, bobina e comutador), ligar o motor, inverter
+   o sentido do giro e deixar ele mais devagar com um resistor em série.
+7. **Arduino: primeiros passos**: o que é o Arduino, pinout, `setup()` e `loop()`, e as práticas
    *pisca LED* (pino 13) e *ativando o buzzer* (pino 8), com código montado em blocos.
 
 Ao concluir tudo, aparece um certificado de conclusão do jogo com o nome da participante.

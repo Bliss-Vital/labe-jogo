@@ -24,6 +24,9 @@
   };
   // Buzzer ativo: conduz só do + para o − e apita a partir de 5 mA. Não queima.
   const BUZZER = { tensao: 1, resistencia: 120, correnteSom: 0.005 };
+  // Motor CC pequeno: no circuito, uma resistência de 25 Ω (puxa uns 200 mA em 5 V). Funciona nos dois
+  // sentidos; a partir de 1 V vence o atrito e gira, mais rápido quanto maior a tensão.
+  const MOTOR = { resistencia: 25, tensaoPartida: 1, rpmPorVolt: 2500 };
 
   function criarUniao() {
     const pai = new Map();
@@ -67,8 +70,9 @@
   }
 
   /*
-   * pecas: [{ tipo: 'fio'|'resistor'|'led'|'buzzer', a, b, valor?, cor?, queimado? }]
+   * pecas: [{ tipo: 'fio'|'resistor'|'led'|'buzzer'|'motor', a, b, valor?, cor?, queimado? }]
    *        no LED e no buzzer, "a" é a perna + e "b" é a perna −.
+   *        no motor, "a" é o terminal da marca vermelha: com a corrente entrando por ele, gira no sentido horário.
    * noDoFuro(furo): nome do nó "físico" do furo (ex.: 'S3' = coluna 3 de cima).
    *        As trilhas da fonte são 'TP'/'BP' (+) e 'TN'/'BN' (−).
    * extras: fontes a mais, como os pinos do Arduino: [{ no: 'D13', v: 5, r: 25 }]
@@ -85,6 +89,7 @@
     const NEG = uniao.achar('TN');
     const leds = pecas.filter(p => p.tipo === 'led' || p.tipo === 'buzzer');
     const resistores = pecas.filter(p => p.tipo === 'resistor');
+    const motores = pecas.filter(p => p.tipo === 'motor');
 
     // numeração dos nós; o negativo da fonte é a referência (0 V)
     const indice = new Map();
@@ -96,7 +101,7 @@
 
     let x = new Float64Array(0);
     const v = i => (i < 0 ? 0 : x[i]);
-    const res = { no, curto: POS === NEG, curtoPino: null, correnteFonte: 0, leds: [], buzzers: [], resistores: [] };
+    const res = { no, curto: POS === NEG, curtoPino: null, correnteFonte: 0, leds: [], buzzers: [], resistores: [], motores: [] };
     res.tensaoNo = n => (n === NEG ? 0 : indice.has(n) ? x[indice.get(n)] : 0);
     res.tensao = furo => res.tensaoNo(no(furo));
 
@@ -104,6 +109,7 @@
       res.leds = leds.filter(p => p.tipo === 'led').map(p => ({ peca: p, vak: 0, corrente: 0, aceso: false, brilho: 0, invertido: false, emCurto: no(p.a) === no(p.b) }));
       res.buzzers = leds.filter(p => p.tipo === 'buzzer').map(p => ({ peca: p, vak: 0, corrente: 0, soando: false, invertido: false }));
       res.resistores = resistores.map(p => ({ peca: p, tensao: 0, corrente: 0 }));
+      res.motores = motores.map(p => ({ peca: p, tensao: 0, corrente: 0, girando: false, rpm: 0, velocidade: 0, sentido: 0 }));
       return res;
     }
 
@@ -116,6 +122,7 @@
       if (raiz !== NEG && raiz !== POS) fontes.push({ i: idx(raiz), v: f.v, g: 1 / f.r });
     }
     const rs = resistores.map(p => ({ peca: p, i: idx(no(p.a)), j: idx(no(p.b)) }));
+    const ms = motores.map(p => ({ peca: p, i: idx(no(p.a)), j: idx(no(p.b)) }));
     const ls = leds.map(p => {
       const buzzer = p.tipo === 'buzzer';
       return {
@@ -140,6 +147,7 @@
       b[iPos] += FONTE_V / FONTE_R;
       for (const f of fontes) { condutancia(f.i, -1, f.g); b[f.i] += f.v * f.g; }
       for (const r of rs) condutancia(r.i, r.j, 1 / r.peca.valor);
+      for (const m of ms) condutancia(m.i, m.j, 1 / MOTOR.resistencia);
       for (const l of ls) {
         if (!l.conduz) { condutancia(l.a, l.k, G_MIN); continue; }
         const g = 1 / l.rs;
@@ -184,6 +192,16 @@
       const t = v(r.i) - v(r.j);
       return { peca: r.peca, tensao: t, corrente: t / r.peca.valor };
     });
+    // velocidade: 0 (parado) a 1 (com os 5 V da fonte); sentido: 1 = horário, −1 = anti-horário
+    const rpmMax = (FONTE_V - MOTOR.tensaoPartida) * MOTOR.rpmPorVolt;
+    res.motores = ms.map(m => {
+      const t = v(m.i) - v(m.j);
+      const rpm = Math.max(0, Math.abs(t) - MOTOR.tensaoPartida) * MOTOR.rpmPorVolt;
+      return {
+        peca: m.peca, tensao: t, corrente: t / MOTOR.resistencia,
+        girando: rpm > 0, rpm, velocidade: Math.min(1, rpm / rpmMax), sentido: rpm > 0 ? Math.sign(t) : 0,
+      };
+    });
     return res;
   }
 
@@ -201,5 +219,5 @@
     }
   }
 
-  raiz.Simulador = { simular, FONTE_V, LED, BUZZER };
+  raiz.Simulador = { simular, FONTE_V, LED, BUZZER, MOTOR };
 })(typeof window !== 'undefined' ? window : globalThis);

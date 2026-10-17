@@ -80,6 +80,7 @@ const Bancada = (() => {
   let piscadas = {}, bipes = {}, antes = {};
   const recemQueimados = new Set();
   const som = nome => { if (typeof Som !== 'undefined') Som.tocar(nome); };
+  const reduzirMovimento = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // ---------------------------------------------------------------- utilidades
   function escurecer(hex, f = 0.65) {
@@ -98,6 +99,7 @@ const Bancada = (() => {
     if (p.tipo === 'resistor') return `O resistor de ${Arte.ohms(p.valor)}`;
     if (p.tipo === 'led') return `O LED ${p.cor}`;
     if (p.tipo === 'buzzer') return 'O buzzer';
+    if (p.tipo === 'motor') return 'O motor';
     return 'O fio';
   }
   function descreverFuro(f) {
@@ -280,10 +282,38 @@ const Bancada = (() => {
     return s + `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="transparent" stroke-width="16"/></g>`;
   }
 
+  // Motor visto de cima, com uma hélice no eixo. A perna "a" é o terminal da marca vermelha.
+  function desenharMotor(p, A, B, info, extra = '') {
+    const { mx, my } = geometria(A, B);
+    const girando = info && info.girando;
+    const pas = [0, 120, 240].map(a => `<ellipse cx="0" cy="-10" rx="4.5" ry="10" fill="#ff6ec7" stroke="#b03a87" stroke-width="1.2" transform="rotate(${a})"/>`).join('');
+    const giro = girando && !reduzirMovimento
+      ? `<animateTransform attributeName="transform" type="rotate" from="0" to="${360 * info.sentido}" dur="${(0.3 / Math.max(info.velocidade, 0.05)).toFixed(2)}s" repeatCount="indefinite"/>` : '';
+    let s = `<g class="peca motor${extra}" data-peca="${p.id}">
+      <line x1="${A.x}" y1="${A.y}" x2="${mx}" y2="${my}" stroke="#a7adb4" stroke-width="2.6"/>
+      <line x1="${B.x}" y1="${B.y}" x2="${mx}" y2="${my}" stroke="#a7adb4" stroke-width="2.6"/>
+      <circle cx="${A.x}" cy="${A.y}" r="6" fill="none" stroke="#d62828" stroke-width="2.5"/>
+      <circle cx="${mx}" cy="${my}" r="15" fill="#c3c8cf" stroke="#6f747c" stroke-width="2"/>
+      <g transform="translate(${mx} ${my})"><g>${pas}<circle r="3.5" fill="#555"/>${giro}</g></g>`;
+    if (girando) {
+      // seta por cima do motor mostrando o sentido do giro, e a velocidade embaixo
+      const r = 25, horario = info.sentido > 0;
+      const g0 = horario ? -150 : -30, g1 = horario ? -30 : -150, rad = g1 * Math.PI / 180;
+      const ponto = g => [mx + r * Math.cos(g * Math.PI / 180), my + r * Math.sin(g * Math.PI / 180)];
+      const [x0, y0] = ponto(g0), [x1, y1] = ponto(g1);
+      const dir = (horario ? Math.atan2(Math.cos(rad), -Math.sin(rad)) : Math.atan2(-Math.cos(rad), Math.sin(rad))) * 180 / Math.PI;
+      const rpm = (Math.round(info.rpm / 100) * 100).toLocaleString('pt-BR');
+      s += `<path d="M${x0} ${y0} A${r} ${r} 0 0 ${horario ? 1 : 0} ${x1} ${y1}" stroke="#1f9d5c" stroke-width="2.5" fill="none"/>
+        <path d="M-6 -5 L4 0 L-6 5 Z" transform="translate(${x1} ${y1}) rotate(${dir})" fill="#1f9d5c"/>
+        <text x="${mx}" y="${my + 38}" font-size="10" font-weight="800" fill="#1f7a4a" text-anchor="middle" paint-order="stroke" stroke="#f3f2ee" stroke-width="3">${rpm} rpm</text>`;
+    }
+    return s + `<circle cx="${mx}" cy="${my}" r="17" fill="transparent"/><line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="transparent" stroke-width="16"/></g>`;
+  }
+
   function desenharPecas() {
     const info = new Map();
-    if (resultado) for (const l of [...resultado.leds, ...resultado.buzzers]) info.set(l.peca.id, l);
-    const ordem = { fio: 0, resistor: 1, led: 2, buzzer: 2 };
+    if (resultado) for (const l of [...resultado.leds, ...resultado.buzzers, ...resultado.motores]) info.set(l.peca.id, l);
+    const ordem = { fio: 0, resistor: 1, led: 2, buzzer: 2, motor: 2 };
     let s = '';
     for (const p of [...pecas].sort((a, b) => ordem[a.tipo] - ordem[b.tipo])) {
       const A = furos.get(p.a), B = furos.get(p.b);
@@ -291,6 +321,7 @@ const Bancada = (() => {
       if (p.tipo === 'fio') s += desenharFio(p, A, B, extra);
       else if (p.tipo === 'resistor') s += desenharResistor(p, A, B, extra);
       else if (p.tipo === 'buzzer') s += desenharBuzzer(p, A, B, info.get(p.id), extra);
+      else if (p.tipo === 'motor') s += desenharMotor(p, A, B, info.get(p.id), extra);
       else s += desenharLed(p, A, B, info.get(p.id), extra);
     }
     camadas.pecas.innerHTML = s;
@@ -363,7 +394,8 @@ const Bancada = (() => {
     if (hover && hover.id !== primeiro) {
       const p = { id: 'previa', tipo: ferramenta.tipo, a: primeiro, b: hover.id, valor: ferramenta.valor, cor: ferramenta.cor };
       const d = { fio: desenharFio, resistor: desenharResistor }[p.tipo];
-      s += `<g opacity=".55" style="pointer-events:none">${d ? d(p, A, hover) : p.tipo === 'buzzer' ? desenharBuzzer(p, A, hover, null) : desenharLed(p, A, hover, null)}</g>`;
+      const comInfo = { buzzer: desenharBuzzer, motor: desenharMotor }[p.tipo] || desenharLed;
+      s += `<g opacity=".55" style="pointer-events:none">${d ? d(p, A, hover) : comInfo(p, A, hover, null)}</g>`;
     }
     camadas.previa.innerHTML = s;
   }
@@ -387,6 +419,10 @@ const Bancada = (() => {
   function miniBuzzer() {
     return `<svg viewBox="-24 -12 48 24"><path d="M-20 0 H20" stroke="#a7adb4" stroke-width="2"/><circle r="10" fill="#1b1b1b" stroke="#666" stroke-width="2"/><circle r="3" fill="#666"/></svg>`;
   }
+  function miniMotor() {
+    const pas = [0, 120, 240].map(a => `<ellipse cx="0" cy="-6" rx="2.6" ry="6" fill="#ff6ec7" transform="rotate(${a})"/>`).join('');
+    return `<svg viewBox="-24 -12 48 24"><path d="M-20 0 H20" stroke="#a7adb4" stroke-width="2"/><circle r="10" fill="#c3c8cf" stroke="#6f747c" stroke-width="2"/>${pas}<circle r="2.2" fill="#555"/><circle cx="-20" cy="0" r="3" fill="none" stroke="#d62828" stroke-width="2"/></svg>`;
+  }
   function miniSonda(cor) {
     return `<svg viewBox="-24 -8 48 16"><path d="M-22 0 H10" stroke="${cor}" stroke-width="7" stroke-linecap="round"/><path d="M10 0 H22" stroke="#d9dde2" stroke-width="3" stroke-linecap="round"/></svg>`;
   }
@@ -403,6 +439,7 @@ const Bancada = (() => {
     if (g.resistores && g.resistores.length) html += grupo('Resistores', g.resistores.map(v => item({ tipo: 'resistor', valor: v }, miniResistor(v), Arte.ohms(v))));
     if (g.leds && g.leds.length) html += grupo('LEDs', g.leds.map(c => item({ tipo: 'led', cor: c }, miniLed(c), c)));
     if (g.buzzer) html += grupo('Buzzer', [item({ tipo: 'buzzer' }, miniBuzzer(), 'buzzer')]);
+    if (g.motor) html += grupo('Motor', [item({ tipo: 'motor' }, miniMotor(), 'motor CC')]);
     if (g.fios) html += grupo('Fios (jumpers)', CORES_FIO.map(c => item({ tipo: 'fio', cor: c.hex }, `<span class="amostra-fio" style="--cor:${c.hex}"></span>`, c.nome)));
     if (g.multimetro) html += grupo('Pontas do multímetro', [item({ tipo: 'sonda', qual: 'v' }, miniSonda('#d62828'), 'vermelha (VΩ)'), item({ tipo: 'sonda', qual: 'p' }, miniSonda('#1a1a1a'), 'preta (COM)')]);
     el.gaveta.innerHTML = html;
@@ -429,6 +466,7 @@ const Bancada = (() => {
       if (f.tipo === 'sonda') t = `Clique no furo onde quer encostar a ponta ${f.qual === 'v' ? 'vermelha' : 'preta'} do multímetro.`;
       else if (f.tipo === 'led') t = primeiro ? 'Agora clique no furo da perna CURTA do LED (cátodo, −).' : `LED ${f.cor}: clique no furo da perna LONGA (ânodo, +).`;
       else if (f.tipo === 'buzzer') t = primeiro ? 'Agora clique no furo da perna − do buzzer.' : 'Buzzer: clique no furo da perna + (a mais longa).';
+      else if (f.tipo === 'motor') t = primeiro ? 'Agora clique no furo do outro terminal do motor.' : 'Motor: clique no furo do terminal com a marca vermelha.';
       else if (f.tipo === 'resistor') t = primeiro ? 'Agora clique no furo da outra perna.' : `Resistor de ${Arte.ohms(f.valor)}: clique no furo da primeira perna.`;
       else t = primeiro ? 'Agora clique no furo onde o fio termina.' : 'Fio: clique no furo onde o fio começa.';
       t += ' (Esc cancela)';
@@ -641,7 +679,7 @@ const Bancada = (() => {
   }
 
   // ---------------------------------------------------------------- API
-  // cfg: { gaveta: {resistores, leds, buzzer, fios, multimetro, arduino, comandos}, manterMontagem, aoMudar(ctx) }
+  // cfg: { gaveta: {resistores, leds, buzzer, motor, fios, multimetro, arduino, comandos}, manterMontagem, aoMudar(ctx) }
   function iniciar(cfg) {
     preparar();
     config = cfg;

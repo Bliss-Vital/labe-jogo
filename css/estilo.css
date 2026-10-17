@@ -31,6 +31,7 @@ body { background: var(--noite); color: var(--creme); font-family: var(--f-pixel
 button { font: inherit; color: inherit; cursor: pointer; }
 button:disabled { cursor: default; }
 :focus-visible { outline: 3px dashed var(--rosa); outline-offset: 3px; }
+[hidden] { display: none !important; } /* senão um display da classe (ex.: .painel-codigo) mostra o que devia sumir */
 h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .01em; }
 .pixelado, .sprite { image-rendering: pixelated; image-rendering: crisp-edges; }
 .sprite { display: inline-block; background-repeat: no-repeat; flex: none; }

@@ -14,7 +14,7 @@
  *
  *   { tipo: 'quiz', quem, pergunta, opcoes: [{ texto, certa: true, resposta }] }
  *       as opções aparecem embaralhadas; "resposta" é o comentário depois do clique
- *       opções com icone: 'resistor' | 'led' | 'capacitor' | 'multimetro' | 'fonte' | 'protoboard' | 'arduino' | 'buzzer'
+ *       opções com icone: 'resistor' | 'led' | 'capacitor' | 'multimetro' | 'fonte' | 'protoboard' | 'arduino' | 'buzzer' | 'motor'
  *   { tipo: 'resistor', quem, texto, alvo: 4700 }     minijogo de montar o resistor pelas cores
  *   { tipo: 'desafio', id: 'primeiro-led' }           abre a bancada (veja desafios.js)
  */
@@ -222,7 +222,7 @@ const OFICINAS = [
           { texto: 'Zero', resposta: 'Se os LEDs acenderam, tem corrente saindo da fonte!' },
         ],
       },
-      { quem: 'alejandra', texto: 'Ótimo trabalho, {nome}! Na última oficina vamos usar o multímetro para medir tudo isso.' },
+      { quem: 'alejandra', texto: 'Ótimo trabalho, {nome}! Na próxima oficina vamos usar o multímetro para medir tudo isso.' },
     ],
   },
 
@@ -259,7 +259,57 @@ const OFICINAS = [
         ],
       },
       { ilustracao: null, quem: 'suzanne', texto: '{nome}, você montou, mediu e calculou. Isso é ser engenheira na prática!' },
-      { quem: 'alejandra', texto: 'Você completou as oficinas de eletrônica básica do LABe! Agora você está pronta para a oficina de Arduino. E lembre: o laboratório também é lugar de mulher!' },
+      { quem: 'alejandra', texto: 'Você completou as oficinas de eletrônica básica do LABe! Agora você está pronta para colocar as coisas em movimento: a próxima oficina é de **motores elétricos**. E lembre: o laboratório também é lugar de mulher!' },
+    ],
+  },
+
+  {
+    id: 'm1',
+    titulo: 'Motores elétricos',
+    resumo: 'Descubra como o motor transforma eletricidade em movimento, inverta o sentido do giro e controle a velocidade.',
+    passos: [
+      { cenario: 'laboratorio', quem: 'alejandra', texto: 'Oi, {nome}! Até agora a eletricidade acendeu luzes. Hoje ela vai fazer as coisas **se mexerem**!' },
+      { quem: 'marta', ilustracao: 'motor', texto: 'Separei um **motor de corrente contínua** para cada bancada. É o mesmo tipo que tem em carrinhos de brinquedo, ventiladores e robôs.' },
+      { quem: 'marta', texto: 'O motor transforma **energia elétrica** em **movimento**: quando passa corrente por ele, o **eixo** gira, e a hélice gira junto.' },
+      { quem: 'marta', ilustracao: 'motor-dentro', texto: 'Por dentro ele tem **ímãs** e uma **bobina**, que é um fio de cobre enrolado muitas vezes. Quando passa corrente, a bobina vira um **eletroímã**.' },
+      { quem: 'marta', texto: 'Polos iguais se repelem e polos diferentes se atraem. Os ímãs empurram um lado da bobina para cima e o outro para baixo, e ela gira junto com o eixo.' },
+      { quem: 'marta', texto: 'A cada meia volta, uma pecinha chamada **comutador** inverte a corrente na bobina. Assim a força continua girando para o mesmo lado e o motor não para.' },
+      {
+        tipo: 'quiz', quem: 'marta', ilustracao: null, pergunta: 'O motor elétrico transforma:',
+        opcoes: [
+          { texto: 'Energia elétrica em movimento', certa: true, resposta: 'Isso! A corrente passa pela bobina, os ímãs empurram e o eixo gira.' },
+          { texto: 'Movimento em energia elétrica', resposta: 'Esse é o contrário: é o que faz um **gerador**. Curiosidade: girando o eixo de um motor com a mão, ele vira um geradorzinho!' },
+          { texto: 'Energia elétrica em luz', resposta: 'Quem faz isso é o LED! O motor transforma a energia em movimento.' },
+        ],
+      },
+      { quem: 'julia', texto: 'Bora ver isso funcionando! Ligue o motor na fonte da bancada.' },
+      { tipo: 'desafio', id: 'liga-motor' },
+      { quem: 'julia', texto: 'Ele girou no sentido **{sentidoMotor}**. E olha o visor da fonte: o motor puxa uns **{correnteMotor} mA**, enquanto um LED aceso usa uns 15 mA!' },
+      { quem: 'julia', texto: 'Diferente do LED, o motor funciona ligado dos dois jeitos. O que muda é o **sentido** do giro. Testa aí: faça ele girar para o outro lado.' },
+      { tipo: 'desafio', id: 'inverte-motor' },
+      {
+        tipo: 'quiz', quem: 'julia', pergunta: 'Um robô tem uma roda de cada lado, cada uma com seu motor. Para ele andar **de ré**, o que a gente faz?',
+        opcoes: [
+          { texto: 'Inverte a polaridade dos dois motores', certa: true, resposta: 'Isso! Com a corrente ao contrário, as duas rodas giram para trás. Na robótica, um **driver de motor** (ponte H) faz essa troca pelo código.' },
+          { texto: 'Desliga um dos motores', resposta: 'Assim o robô fica girando em volta da roda parada! Para dar ré, as duas rodas precisam girar ao contrário.' },
+          { texto: 'Coloca um resistor maior', resposta: 'O resistor muda a velocidade, mas não o sentido. Para dar ré, é preciso inverter a corrente.' },
+        ],
+      },
+      { quem: 'marta', ilustracao: 'motor-velocidade', texto: 'E a velocidade? Quanto **maior a tensão** no motor, mais rápido ele gira. Com menos tensão, ele gira mais devagar.' },
+      { quem: 'marta', texto: 'A fonte da bancada é fixa em 5 V. Mas, com um **resistor em série**, parte da tensão fica no resistor e sobra menos para o motor.' },
+      { quem: 'julia', ilustracao: null, texto: 'Desafio: faça o motor girar **mais devagar** usando um resistor.' },
+      { tipo: 'desafio', id: 'motor-devagar' },
+      { quem: 'julia', texto: 'Com o resistor de **{resistorMotor}**, sobraram **{tensaoMotor} V** para o motor. E com um resistor grande demais, ele nem consegue sair do lugar!' },
+      {
+        tipo: 'quiz', quem: 'alejandra', pergunta: 'Um pino do Arduino fornece só uns **20 mA**. Dá para ligar o motor direto nele?',
+        opcoes: [
+          { texto: 'Não: o motor precisa de muito mais corrente', certa: true, resposta: 'Isso! O motor pede uns 200 mA. Por isso a gente usa um **transistor** ou um **driver de motor** entre o Arduino e o motor.' },
+          { texto: 'Sim, sem problema nenhum', resposta: 'Lembra do visor da fonte: o motor puxou uns 200 mA, dez vezes mais do que o pino aguenta!' },
+          { texto: 'Só se ele girar devagar', resposta: 'Mesmo devagar ele ainda puxa bem mais que 20 mA. A saída é usar um transistor ou um driver de motor.' },
+        ],
+      },
+      { quem: 'alejandra', texto: 'Parabéns, {nome}! Agora você sabe como os motores colocam carrinhos, ventiladores e robôs em movimento.' },
+      { quem: 'alejandra', texto: 'Na próxima oficina, a **equipe de robótica** vem te ensinar a programar o **Arduino**!' },
     ],
   },
 

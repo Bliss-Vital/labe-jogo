@@ -81,9 +81,22 @@ const Arte = (() => {
     return s;
   }
 
+  // Motor CC visto de lado, centrado no meio da carcaça: terminais à esquerda, eixo e hélice à direita.
+  // Ocupa de x = −74 a 95 e de y = −38 a 38.
+  function motorLateral() {
+    return `<rect x="-74" y="-17" width="16" height="6" fill="#c9a227"/><rect x="-74" y="11" width="16" height="6" fill="#c9a227"/>
+      <rect x="-62" y="-24" width="14" height="48" rx="3" fill="#e9d3a6"/><circle cx="-55" cy="-14" r="3" fill="#d62828"/>
+      <rect x="-50" y="-30" width="96" height="60" rx="8" fill="#c3c8cf"/>
+      <rect x="-46" y="-25" width="88" height="6" fill="#fff" opacity=".45"/><rect x="-50" y="18" width="96" height="8" fill="#9aa0a6"/>
+      <rect x="46" y="-12" width="10" height="24" fill="#9aa0a6"/>
+      <rect x="56" y="-3" width="34" height="6" fill="#d9dde2" stroke="#8a909a" stroke-width="1"/>
+      <ellipse cx="90" cy="-20" rx="5" ry="18" fill="#ff6ec7"/><ellipse cx="90" cy="20" rx="5" ry="18" fill="#d94fa6"/><circle cx="90" cy="0" r="5" fill="#555"/>`;
+  }
+
   // ---------------------------------------------------------------- ícones (caixa 120×100)
   const ICONES = {
     arduino: () => `<g transform="translate(14 18) scale(.31)">${placaArduino()}</g>`,
+    motor: () => `<g transform="translate(60 50) scale(.6)">${motorLateral()}</g>`,
     buzzer: () => `<path d="M48 70 V96 M72 70 V88" stroke="#9aa0a6" stroke-width="3"/>
       <rect x="30" y="22" width="60" height="50" rx="6" fill="#1b1b1b"/><ellipse cx="60" cy="22" rx="30" ry="9" fill="#333"/><circle cx="60" cy="22" r="4" fill="#666"/>
       <text x="40" y="58" font-size="16" font-weight="700" fill="#ff8a8a">+</text>`,
@@ -393,6 +406,60 @@ const Arte = (() => {
       s += texto(455, 140, 'Pino em HIGH: apita', { tam: 15 }) + texto(455, 162, 'Pino em LOW: silêncio', { tam: 15 });
       s += texto(455, 200, 'tone(8, 440) toca a', { tam: 15, fam: 'ui-monospace,Consolas,monospace' }) + texto(455, 222, 'nota lá (440 Hz)', { tam: 15 });
       return [600, 310, s];
+    },
+  });
+
+  // ---------------------------------------------------------------- oficina de motores
+  Object.assign(ILUSTRACOES, {
+    motor() {
+      let s = `<g transform="translate(200 140) scale(1.7)">${motorLateral()}</g>`;
+      s += `<path d="M353 82 A22 58 0 0 1 353 198" stroke="#1f8f52" stroke-width="4" fill="none"/>` + seta(351, 198, 180, '#1f8f52');
+      const rot = (x1, y1, x2, y2, linhas, cor) => `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="${TINTA}" stroke-width="1.5"/>` +
+        linhas.map((l, i) => texto(x2, y2 < y1 ? y2 - 8 - (linhas.length - 1 - i) * 17 : y2 + 16 + i * 17, l, { tam: 14, peso: i ? 500 : 700, cor: i ? TINTA : cor })).join('');
+      s += rot(84, 114, 84, 64, ['terminais', 'onde ligam os fios'], '#d62828');
+      s += rot(200, 89, 230, 50, ['carcaça'], TINTA);
+      s += rot(353, 76, 353, 40, ['hélice'], '#d94fa6');
+      s += rot(320, 142, 300, 236, ['eixo', 'é ele que gira'], '#1f8f52');
+      s += `<rect x="420" y="60" width="170" height="190" fill="#f3e6fb"/>`;
+      s += texto(505, 92, 'Energia elétrica', { tam: 16, peso: 700 }) + seta(505, 110, 90, TINTA) + texto(505, 136, 'movimento!', { tam: 16, peso: 700, cor: '#1f8f52' });
+      s += texto(505, 176, 'Tem motor em:', { tam: 14, peso: 700 }) + texto(505, 198, 'ventiladores,', { tam: 14 })
+        + texto(505, 216, 'carrinhos, robôs', { tam: 14 }) + texto(505, 234, 'e drones', { tam: 14 });
+      return [600, 285, s];
+    },
+
+    // Visto de frente, olhando o eixo: os dois lados da bobina passam entre os ímãs.
+    // ⊙ = corrente saindo da tela, ⊗ = entrando. Com o campo do N para o S, a força sobe de um lado e desce do outro.
+    'motor-dentro'() {
+      let s = `<rect x="40" y="50" width="110" height="200" fill="#e5484d"/><rect x="450" y="50" width="110" height="200" fill="#3d6fe0"/>`;
+      s += texto(95, 168, 'N', { tam: 48, peso: 800, cor: '#fff' }) + texto(505, 168, 'S', { tam: 48, peso: 800, cor: '#fff' });
+      s += [95, 150, 205].map(y => `<path d="M150 ${y} H450" stroke="#c9b8de" stroke-width="2" stroke-dasharray="6 8"/>` + seta(440, y, 0, '#c9b8de')).join('');
+      s += `<circle cx="300" cy="150" r="72" fill="none" stroke="${TINTA}" stroke-width="2" stroke-dasharray="4 6"/>
+        <path d="M228 150 H372" stroke="#c87533" stroke-width="6"/><circle cx="300" cy="150" r="7" fill="#6f747c"/>
+        <circle cx="228" cy="150" r="14" fill="#e8a25e" stroke="#8a4b17" stroke-width="3"/><circle cx="228" cy="150" r="4" fill="#8a4b17"/>
+        <circle cx="372" cy="150" r="14" fill="#e8a25e" stroke="#8a4b17" stroke-width="3"/><path d="M366 144 L378 156 M378 144 L366 156" stroke="#8a4b17" stroke-width="3"/>`;
+      s += `<path d="M228 132 V86 M372 168 V214" stroke="#1f8f52" stroke-width="5"/>` + seta(228, 84, -90, '#1f8f52') + seta(372, 216, 90, '#1f8f52');
+      s += texto(192, 74, 'força', { tam: 14, peso: 700, cor: '#1f8f52' }) + texto(408, 240, 'força', { tam: 14, peso: 700, cor: '#1f8f52' });
+      s += `<path d="M300 44 V136" stroke="${TINTA}" stroke-width="1.5"/>` + texto(300, 36, 'bobina de cobre (vira um eletroímã)', { tam: 14, peso: 700, cor: '#8a4b17' });
+      s += `<path d="M346 230 A92 92 0 0 1 254 230" stroke="#1f8f52" stroke-width="4" fill="none"/>` + seta(254, 230, -150, '#1f8f52');
+      s += texto(300, 266, 'o eixo gira', { tam: 15, peso: 700, cor: '#1f8f52' });
+      s += texto(300, 296, 'Ímãs + corrente na bobina = força que gira o eixo.', { tam: 15, peso: 700 });
+      s += texto(300, 316, 'O comutador inverte a corrente a cada meia volta.', { tam: 14 });
+      return [600, 326, s];
+    },
+
+    'motor-velocidade'() {
+      let s = `<path d="M60 100 V50 H120 M220 50 H300 V114 M300 166 V230 H60 V180" fill="none" stroke="${TINTA}" stroke-width="3"/>`;
+      s += fonteSimb(60, 140) + zigH(120, 220, 50);
+      s += `<circle cx="300" cy="140" r="26" fill="#fff" stroke="${TINTA}" stroke-width="3"/>` + texto(300, 149, 'M', { tam: 24, peso: 800 });
+      s += seta(260, 34, 0) + seta(318, 196, 90);
+      s += texto(170, 28, 'V no resistor', { tam: 14, peso: 700, cor: '#8e44ad' }) + texto(170, 80, 'resistor', { tam: 13 });
+      s += texto(334, 136, 'V no', { tam: 14, peso: 700, cor: '#d62828', ancora: 'start' }) + texto(334, 154, 'motor', { tam: 14, peso: 700, cor: '#d62828', ancora: 'start' });
+      s += texto(190, 266, '5 V = V no resistor + V no motor', { tam: 15, peso: 700 });
+      s += `<rect x="400" y="30" width="190" height="210" fill="#f3e6fb"/>`;
+      s += texto(495, 66, 'Mais tensão no motor:', { tam: 14, peso: 700 }) + texto(495, 88, 'gira mais rápido', { tam: 14, cor: '#1f8f52', peso: 700 });
+      s += texto(495, 128, 'Menos tensão:', { tam: 14, peso: 700 }) + texto(495, 150, 'gira mais devagar', { tam: 14, cor: '#b26b00', peso: 700 });
+      s += texto(495, 190, 'Tensão de menos:', { tam: 14, peso: 700 }) + texto(495, 212, 'nem sai do lugar!', { tam: 14, cor: '#c0392b', peso: 700 });
+      return [600, 285, s];
     },
   });
 
