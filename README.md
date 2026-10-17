@@ -8,6 +8,10 @@ de 5 V, resistores, LEDs, fios, multímetro, um **motor CC** e um **Arduino UNO*
 calcula tensões e correntes: o LED acende, fica fraquinho, ou **queima** se faltar o resistor; o motor
 gira mais rápido ou mais devagar conforme a tensão, no sentido que a corrente manda.
 
+**Jogar online:** <https://claude.ai/artifact/NtjfM2VXytDxKJUL2JiBXj>
+
+O que cada oficina ensina, quem conduz e quais são os desafios está em [`CONTEUDO.md`](CONTEUDO.md).
+
 ## Oficinas
 
 1. **Bem-vinda ao laboratório**: a bancada, tensão, corrente, resistência e circuito fechado.
@@ -15,8 +19,10 @@ gira mais rápido ou mais devagar conforme a tensão, no sentido que a corrente 
 3. **Protoboard e o primeiro LED**: como os furos se conectam, polaridade do LED, primeiro circuito.
 4. **Série e paralelo**: dois LEDs de cada jeito, na bancada.
 5. **Medindo com o multímetro**: medir a tensão no LED e no resistor e calcular a corrente.
-6. **Motores elétricos**: como o motor CC funciona (ímãs, bobina e comutador), ligar o motor, inverter
-   o sentido do giro e deixar ele mais devagar com um resistor em série.
+6. **Motores elétricos**: a equipe de robótica Project Neon se apresenta; como o motor CC funciona
+   (ímãs, bobina e comutador), ligar o motor, inverter o sentido do giro, deixar ele mais devagar com
+   um resistor em série e o **minijogo do PWM** (segurar o botão liga o motor, soltar desliga: com
+   toques no ritmo certo, a jogadora controla a velocidade do carrinho).
 7. **Arduino: primeiros passos**: o que é o Arduino, pinout, `setup()` e `loop()`, e as práticas
    *pisca LED* (pino 13) e *ativando o buzzer* (pino 8), com código montado em blocos.
 
@@ -27,8 +33,8 @@ Ao concluir tudo, aparece um certificado de conclusão do jogo com o nome da par
 Não precisa instalar nada: dê dois cliques em `index.html` e o jogo abre no navegador.
 O progresso fica salvo no próprio navegador.
 
-**Modo monitora:** abra com `index.html?livre` (ou o link publicado + `?livre`) para liberar todas as
-oficinas sem precisar jogar na ordem.
+**Modo monitora:** abra com `index.html?livre` (no link online, use `#livre` no fim) para liberar
+todas as oficinas sem precisar jogar na ordem.
 
 ## Como editar o conteúdo
 
@@ -38,6 +44,7 @@ oficinas sem precisar jogar na ordem.
 | Desafios da bancada (objetivo, peças da gaveta, dicas, quando conta como "certo") | `js/desafios.js` |
 | Cenários e ilustrações das aulas | `js/arte.js` |
 | Comandos do Arduino e o editor em blocos | `js/arduino.js` |
+| Minijogo do PWM (inércia do carrinho, faixa da meta) | `js/pwm.js` |
 | Cores e visual | `css/estilo.css` |
 | Física do circuito (tensão da fonte, LEDs) | `js/simulador.js` |
 
@@ -54,8 +61,9 @@ Exemplo de passos em `js/historia.js`:
 ```
 
 A equipe do jogo fica em `PERSONAGENS` (em `js/historia.js`): Profª Alejandra, as monitoras Suzanne,
-Aline e Julia, as técnicas Marta e Lívia, e, na oficina de Arduino, Aline, Letícia e Julia com o uniforme
-da equipe de robótica.
+Aline, Letícia e Julia, as técnicas Marta e Lívia, e, nas oficinas de motores e de Arduino, Aline,
+Letícia e Julia com o uniforme da equipe de robótica Project Neon. Quem aparece em cada oficina está
+em [`CONTEUDO.md`](CONTEUDO.md).
 
 ## Personagens (pixel art)
 
@@ -73,7 +81,8 @@ e `img/monitoras.png`. O jogo descobre sozinho quantas personagens existem.
 ## Testes
 
 Abra `testes/simulador.html` no navegador: ele confere o simulador (LED acende com ~13,8 mA, queima
-sem resistor, curto-circuito, série, paralelo, multímetro...) e mostra quantos testes passaram.
+sem resistor, curto-circuito, série, paralelo, multímetro, motor, Arduino), o minijogo do PWM e o
+roteiro (todo nome, desafio e ilustração usados existem), e mostra quantos testes passaram.
 
 ## Publicar na internet
 
