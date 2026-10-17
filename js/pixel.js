@@ -1,8 +1,8 @@
 /*
  * pixel.js — sprites das personagens (img/*.png, 32x32 por quadro) e o "palco" pixelado da cena.
  *
- * img/personagens.png: uma personagem por quadro (as que a jogadora pode escolher)
- * img/monitoras.png:   Helena, Bia e Nina
+ * img/personagens.png: uma personagem por quadro (as da equipe estão em PERSONAGENS; as outras a jogadora escolhe)
+ * img/monitoras.png:   desenhos extras (o 2º quadro é a Suzanne)
  * O número de personagens é descoberto pelo tamanho da imagem: largura ÷ altura.
  */
 const Pixel = (() => {
@@ -97,7 +97,7 @@ const Palco = (() => {
     if (!ctx) return;
     if (fundo) ctx.drawImage(fundo, 0, 0);
     else { ctx.fillStyle = '#e2d4ee'; ctx.fillRect(0, 0, W, H); }
-    ator(monitora, 'monitoras', 106 - desloc, true, falando === 'monitora');
+    if (monitora) ator(monitora.sprite, monitora.folha, 106 - desloc, true, falando === 'monitora');
     ator(jogadora, 'personagens', 152 - desloc, false, falando === 'jogadora');
   }
 
@@ -110,7 +110,8 @@ const Palco = (() => {
       .catch(() => { fundo = null; desenhar(); });
   }
 
-  // quem: 'monitora' | 'jogadora' | null; deslocar: abre espaço para a ilustração, à direita
+  // monitora: { folha, sprite } ou null; quem: 'monitora' | 'jogadora' | null
+  // deslocar: abre espaço para a ilustração, à direita
   function definirElenco(qMonitora, qJogadora, quem, deslocar = false) {
     preparar();
     monitora = qMonitora; jogadora = qJogadora; falando = quem; desloc = deslocar ? 80 : 0;

@@ -67,9 +67,16 @@ const Som = (() => {
   }
   const estrelasHTML = n => `<span class="estrelas" aria-label="${n} de 3 estrelas">${'★'.repeat(n)}<span class="apagada">${'★'.repeat(3 - n)}</span></span>`;
   const reduzirMovimento = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const temPersonagem = () => estado.personagem !== null && estado.personagem < (Pixel.folhas.personagens ? Pixel.folhas.personagens.quadros : 0);
+  // quadros de img/personagens.png que são da equipe (professora, monitoras, técnicas) não podem ser escolhidos
+  const daEquipe = new Set(Object.values(PERSONAGENS).filter(p => p.folha === 'personagens').map(p => p.sprite));
+  const escolhiveis = () => {
+    const n = Pixel.folhas.personagens ? Pixel.folhas.personagens.quadros : 0;
+    return Array.from({ length: n }, (_, i) => i).filter(i => !daEquipe.has(i));
+  };
+  const temPersonagem = () => estado.personagem !== null && escolhiveis().includes(estado.personagem);
   const spriteJogadora = (escala, espelhar = false) => Pixel.sprite('personagens', estado.personagem || 0, { escala, espelhar });
-  const spriteMonitora = (id, escala) => Pixel.sprite('monitoras', PERSONAGENS[id].sprite, { escala, espelhar: true });
+  const spriteMonitora = (id, escala) => Pixel.sprite(PERSONAGENS[id].folha, PERSONAGENS[id].sprite, { escala, espelhar: true });
+  const rostoMonitora = (id, escala) => Pixel.rosto(PERSONAGENS[id].folha, PERSONAGENS[id].sprite, escala, true);
 
   // ---------------------------------------------------------------- telas e modais
   function mostrarTela(id) {
@@ -155,24 +162,24 @@ const Som = (() => {
   function abrirEscolha() {
     fecharModal();
     const lista = $('#lista-personagens');
-    const n = Pixel.folhas.personagens ? Pixel.folhas.personagens.quadros : 0;
+    const opcoes = escolhiveis();
     escolhida = temPersonagem() ? estado.personagem : null;
-    lista.innerHTML = n ? '' : '<p class="aviso-sem-imagem">Não encontrei as personagens (img/personagens.png).</p>';
-    for (let i = 0; i < n; i++) {
+    lista.innerHTML = opcoes.length ? '' : '<p class="aviso-sem-imagem">Não encontrei as personagens (img/personagens.png).</p>';
+    opcoes.forEach((quadro, k) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'opcao-personagem';
       b.setAttribute('role', 'radio');
-      b.setAttribute('aria-checked', String(i === escolhida));
-      b.setAttribute('aria-label', `Personagem ${i + 1}`);
-      b.innerHTML = Pixel.sprite('personagens', i, { escala: 3 });
+      b.setAttribute('aria-checked', String(quadro === escolhida));
+      b.setAttribute('aria-label', `Personagem ${k + 1}`);
+      b.innerHTML = Pixel.sprite('personagens', quadro, { escala: 3 });
       b.addEventListener('click', () => {
-        escolhida = i;
-        lista.querySelectorAll('.opcao-personagem').forEach((x, k) => x.setAttribute('aria-checked', String(k === i)));
+        escolhida = quadro;
+        lista.querySelectorAll('.opcao-personagem').forEach(x => x.setAttribute('aria-checked', String(x === b)));
         Som.tocar('clique');
       });
       lista.appendChild(b);
-    }
+    });
     $('#nome').value = estado.nome || '';
     mostrarTela('tela-escolha');
   }
@@ -242,7 +249,7 @@ const Som = (() => {
   // quem está em cena e quem está falando
   function atualizarElenco(quem) {
     const falando = quem && PERSONAGENS[quem] ? 'monitora' : quem === 'voce' ? 'jogadora' : null;
-    Palco.definirElenco(cena.monitora ? PERSONAGENS[cena.monitora].sprite : null, estado.personagem, falando, !!cena.ilustracao);
+    Palco.definirElenco(cena.monitora ? PERSONAGENS[cena.monitora] : null, estado.personagem, falando, !!cena.ilustracao);
   }
 
   function digitar(alvo, html, aoTerminar) {
@@ -285,7 +292,7 @@ const Som = (() => {
       nome.textContent = jogadora ? estado.nome : PERSONAGENS[quem].nome;
       nome.style.background = jogadora ? 'var(--rosa-escuro)' : PERSONAGENS[quem].cor;
       retrato.className = 'dialogo-retrato' + (jogadora ? ' jogadora' : '');
-      retrato.innerHTML = jogadora ? Pixel.rosto('personagens', estado.personagem, 4, true) : Pixel.rosto('monitoras', PERSONAGENS[quem].sprite, 4, true);
+      retrato.innerHTML = jogadora ? Pixel.rosto('personagens', estado.personagem, 4, true) : rostoMonitora(quem, 4);
     }
     $('#dialogo-opcoes').innerHTML = '';
     $('#dialogo-feedback').hidden = true;
@@ -465,7 +472,7 @@ const Som = (() => {
     Object.assign(bancada, { desafio: d, concluido: false, dica: 0, autoAtiva: false });
     $('#bancada-objetivo').innerHTML = `<span class="rotulo">${escapar(d.titulo)}:</span>${formatar(d.objetivo)}`;
     const m = PERSONAGENS[d.monitora];
-    $('#dica-avatar').innerHTML = Pixel.rosto('monitoras', m.sprite, 3, true);
+    $('#dica-avatar').innerHTML = rostoMonitora(d.monitora, 3);
     $('#dica-nome').textContent = m.nome;
     mostrarDica(formatar(d.intro || 'Bora montar! Se precisar, peça uma dica.'));
     $('#btn-dica').disabled = !(d.dicas && d.dicas.length);

@@ -3,7 +3,7 @@
  *
  * Cada desafio tem:
  *   titulo, objetivo   textos mostrados no topo da bancada
- *   monitora           quem dá as dicas (id de PERSONAGENS, em historia.js)
+ *   monitora           quem dá as dicas (id de PERSONAGENS, em historia.js, ex.: 'suzanne')
  *   intro              primeira fala da monitora na bancada
  *   gaveta             o que aparece na gaveta: resistores (valores em Ω), leds (cores),
  *                      fios (true/false) e multimetro (true/false)
@@ -73,7 +73,7 @@ const DESAFIOS = {
   'primeira-peca': {
     titulo: 'Seu primeiro componente',
     objetivo: 'Encaixe um **resistor de 220 Ω** na protoboard, com cada perna em uma coluna diferente.',
-    monitora: 'bia',
+    monitora: 'suzanne',
     intro: 'Clique no resistor de 220 Ω na gaveta e depois em dois furos da placa. Passe o mouse nos furos para ver quais estão ligados!',
     gaveta: { resistores: [220, 1000] },
     dicas: [
@@ -90,7 +90,7 @@ const DESAFIOS = {
   'primeiro-led': {
     titulo: 'Acenda um LED',
     objetivo: 'Faça um caminho do **+** da fonte, passando por um **resistor** e por um **LED**, até o **−**. Depois ligue a fonte.',
-    monitora: 'bia',
+    monitora: 'suzanne',
     intro: 'Dica de ouro: a trilha vermelha (+) e a azul (−) já estão ligadas na fonte. Use fios para levar a energia até as colunas onde estão as peças.',
     gaveta: { resistores: [220, 1000, 10000], leds: ['vermelho', 'verde', 'amarelo'], fios: true },
     dicas: [
@@ -105,7 +105,7 @@ const DESAFIOS = {
   serie: {
     titulo: 'Dois LEDs em série',
     objetivo: 'Acenda **dois LEDs em série**: um depois do outro, num caminho só, junto com um resistor.',
-    monitora: 'nina',
+    monitora: 'julia',
     intro: 'Em série a corrente não tem escolha: ela passa pelo primeiro LED e depois pelo segundo. A perna curta de um encontra a perna longa do outro na mesma coluna.',
     gaveta: { resistores: [100, 220, 1000], leds: ['vermelho', 'verde', 'amarelo', 'azul'], fios: true },
     dicas: [
@@ -125,7 +125,7 @@ const DESAFIOS = {
   paralelo: {
     titulo: 'Dois LEDs em paralelo',
     objetivo: 'Acenda **dois LEDs em paralelo**: cada um com o seu próprio caminho entre o **+** e o **−**.',
-    monitora: 'nina',
+    monitora: 'julia',
     intro: 'Pense em duas “pontes” independentes ligando a trilha + à trilha −. O ideal é cada LED ter o seu próprio resistor.',
     gaveta: { resistores: [220, 1000], leds: ['vermelho', 'verde', 'amarelo', 'azul'], fios: true },
     dicas: [
@@ -145,7 +145,7 @@ const DESAFIOS = {
   'medir-led': {
     titulo: 'Medindo a tensão do LED',
     objetivo: 'Monte o circuito do LED, ligue a fonte e meça a **tensão sobre o LED** com o multímetro.',
-    monitora: 'nina',
+    monitora: 'livia',
     intro: 'Primeiro monte o circuito com resistor e LED. Depois encoste a ponta **vermelha** do lado da perna longa do LED e a **preta** do lado da perna curta.',
     gaveta: { resistores: [220, 1000], leds: ['vermelho', 'verde', 'amarelo'], fios: true, multimetro: true },
     dicas: [
@@ -171,7 +171,7 @@ const DESAFIOS = {
   'medir-resistor': {
     titulo: 'Medindo a tensão do resistor',
     objetivo: 'Agora, sem desmontar nada, meça a **tensão sobre o resistor**.',
-    monitora: 'nina',
+    monitora: 'livia',
     intro: 'Mesma ideia: uma ponta de cada lado do resistor. A vermelha vai do lado que está ligado ao + da fonte.',
     gaveta: { resistores: [220, 1000], leds: ['vermelho', 'verde', 'amarelo'], fios: true, multimetro: true },
     manterMontagem: true,
@@ -194,7 +194,7 @@ const DESAFIOS = {
   'pisca-led': {
     titulo: 'Prática 1: pisca LED',
     objetivo: 'Ligue um LED (com resistor) no **pino 13** e programe o Arduino para fazer ele **piscar**.',
-    monitora: 'bia',
+    monitora: 'aline-robotica',
     intro: 'Primeiro o circuito: pino 13 → resistor → LED → GND. Depois o código: no setup(), o pino 13 vira OUTPUT; no loop(), liga, espera, desliga e espera.',
     gaveta: { arduino: true, resistores: [220, 1000], leds: ['vermelho', 'verde', 'amarelo'], fios: true, comandos: ['pinMode', 'digitalWrite', 'delay'] },
     dicas: [
@@ -211,7 +211,7 @@ const DESAFIOS = {
   buzzer: {
     titulo: 'Prática 2: ativando o buzzer',
     objetivo: 'Ligue o **buzzer** no **pino 8** e faça ele **apitar** pelo menos duas vezes.',
-    monitora: 'nina',
+    monitora: 'julia-robotica',
     intro: 'O buzzer tem polaridade, igual ao LED: a perna + vai para o pino 8 e a − para o GND. No código, dá para usar digitalWrite com delay, ou tone e noTone.',
     gaveta: { arduino: true, buzzer: true, fios: true, resistores: [220], leds: ['vermelho'], comandos: ['pinMode', 'digitalWrite', 'delay', 'tone', 'noTone'] },
     dicas: [

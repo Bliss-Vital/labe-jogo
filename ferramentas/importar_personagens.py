@@ -3,8 +3,9 @@ Converte os desenhos do Piskel (fotos/personagens/*.piskel) nas imagens que o jo
 
     py ferramentas/importar_personagens.py
 
-- monitoras.piskel        -> img/monitoras.png    (quadros: Helena, Bia, Nina)
-- todos os outros .piskel -> img/personagens.png  (cada quadro vira uma personagem para escolher)
+- monitoras.piskel        -> img/monitoras.png    (o 2º quadro é a Suzanne)
+- todos os outros .piskel -> img/personagens.png  (personagens para escolher e a equipe do LABe;
+                                                   quem é da equipe está em PERSONAGENS, js/historia.js)
 
 Cada quadro tem 32x32 pixels. Também dá para exportar direto do Piskel
 (Exportar > PNG > "spritesheet" em uma linha só) e salvar com esses nomes em img/.

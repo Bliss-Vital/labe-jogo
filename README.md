@@ -41,8 +41,8 @@ oficinas sem precisar jogar na ordem.
 Exemplo de passos em `js/historia.js`:
 
 ```js
-{ quem: 'bia', texto: 'Oi, {nome}! Essa é a **protoboard**.', ilustracao: 'protoboard' },
-{ tipo: 'quiz', quem: 'nina', pergunta: 'Qual o valor deste resistor?', ilustracao: 'resistor:vermelho,vermelho,marrom',
+{ quem: 'suzanne', texto: 'Oi, {nome}! Essa é a **protoboard**.', ilustracao: 'protoboard' },
+{ tipo: 'quiz', quem: 'aline', pergunta: 'Qual o valor deste resistor?', ilustracao: 'resistor:vermelho,vermelho,marrom',
   opcoes: [
     { texto: '220 Ω', certa: true, resposta: 'Isso!' },
     { texto: '22 Ω', resposta: 'Quase! Falta um zero.' },
@@ -50,16 +50,19 @@ Exemplo de passos em `js/historia.js`:
 { tipo: 'desafio', id: 'primeiro-led' },
 ```
 
-As monitoras do jogo (Profª Helena, Bia e Nina) são personagens fictícias. Para usar nomes de monitoras
-reais, troque em `PERSONAGENS` (em `js/historia.js`), com a autorização delas.
+A equipe do jogo fica em `PERSONAGENS` (em `js/historia.js`): Profª Alejandra, as monitoras Suzanne,
+Aline e Julia, as técnicas Marta e Lívia, e, na oficina de Arduino, Aline, Letícia e Julia com o uniforme
+da equipe de robótica.
 
 ## Personagens (pixel art)
 
 Os desenhos ficam em `fotos/personagens/`, no formato do [Piskel](https://www.piskelapp.com/), com 32×32
 pixels por quadro, de perfil, viradas para a esquerda:
 
-- cada quadro dos arquivos `.piskel` vira uma personagem que a jogadora pode escolher;
-- `monitoras.piskel` tem Helena, Bia e Nina, nessa ordem (no jogo elas aparecem viradas para a direita).
+- os quadros dos arquivos `.piskel` viram `img/personagens.png`. Os que estão em `PERSONAGENS`
+  (`js/historia.js`) são da equipe; todos os outros aparecem para a jogadora escolher;
+- `monitoras.piskel` vira `img/monitoras.png` (o 2º quadro é a Suzanne);
+- no jogo, a equipe aparece virada para a direita, de frente para a jogadora.
 
 Depois de editar no Piskel, rode `py ferramentas/importar_personagens.py` para gerar `img/personagens.png`
 e `img/monitoras.png`. O jogo descobre sozinho quantas personagens existem.
