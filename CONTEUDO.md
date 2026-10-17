@@ -4,8 +4,8 @@ Guia do que acontece em cada oficina do jogo: quem conduz, o que é ensinado, as
 e os desafios da bancada. Serve para a equipe do LABe revisar o conteúdo e comparar com as oficinas
 de verdade.
 
-Jogar online: <https://claude.ai/artifact/NtjfM2VXytDxKJUL2JiBXj>. Para abrir todas as oficinas sem
-jogar na ordem, coloque `#livre` no fim do link.
+Jogar online: <https://bliss-vital.github.io/labe-jogo/>. Para abrir todas as oficinas sem jogar na
+ordem, coloque `#livre` no fim do link.
 
 ## A equipe no jogo
 

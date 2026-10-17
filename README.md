@@ -8,7 +8,8 @@ de 5 V, resistores, LEDs, fios, multímetro, um **motor CC** e um **Arduino UNO*
 calcula tensões e correntes: o LED acende, fica fraquinho, ou **queima** se faltar o resistor; o motor
 gira mais rápido ou mais devagar conforme a tensão, no sentido que a corrente manda.
 
-**Jogar online:** <https://claude.ai/artifact/NtjfM2VXytDxKJUL2JiBXj>
+**Jogar online:** <https://bliss-vital.github.io/labe-jogo/> (também em
+<https://claude.ai/artifact/NtjfM2VXytDxKJUL2JiBXj>)
 
 O que cada oficina ensina, quem conduz e quais são os desafios está em [`CONTEUDO.md`](CONTEUDO.md).
 
@@ -86,8 +87,7 @@ roteiro (todo nome, desafio e ilustração usados existem), e mostra quantos tes
 
 ## Publicar na internet
 
-O jogo é só HTML, CSS e JavaScript, sem servidor. Dá para publicar de graça no **GitHub Pages**:
-*Settings → Pages → Deploy from a branch → `main` / raiz*. Em conta gratuita, o GitHub Pages
-só funciona com repositório **público**. Para manter o repositório privado e ainda publicar,
-é preciso o GitHub Pro, que estudantes ganham de graça pelo
-[GitHub Education](https://education.github.com/) com o e-mail da universidade.
+O jogo é só HTML, CSS e JavaScript, sem servidor, e está publicado de graça no **GitHub Pages**
+(*Settings → Pages → Deploy from a branch → `main` / raiz*): <https://bliss-vital.github.io/labe-jogo/>.
+Cada `git push` na branch `main` atualiza o site sozinho em um ou dois minutos. O arquivo `.nojekyll`
+faz o GitHub servir os arquivos como estão.
