@@ -483,7 +483,7 @@ const Som = (() => {
     }
     const auto = dicaAutomatica(c, d);
     if (auto) { mostrarDica(formatar(auto.texto), auto.tipo); bancada.autoAtiva = true; }
-    else if (bancada.autoAtiva) {
+    else if (bancada.autoAtiva && c.motivo !== 'pinos') {
       mostrarDica(c.ligada ? 'Isso, nada de errado por aqui. Continue montando!' : formatar(d.intro || 'Continue montando!'));
       bancada.autoAtiva = false;
     }

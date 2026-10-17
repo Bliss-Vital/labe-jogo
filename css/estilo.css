@@ -218,10 +218,14 @@ h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .0
 .bancada-objetivo { flex: 1; min-width: 0; line-height: 1.35; }
 .bancada-objetivo .rotulo { color: var(--rosa); font-weight: 700; margin-right: 6px; }
 .bancada-objetivo strong { color: #ffd6ea; }
-.bancada-corpo { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 16px; padding: 16px; align-items: start; }
+.bancada-corpo { display: grid; grid-template-columns: minmax(0, 1fr) 310px; grid-template-areas: "placa lateral"; gap: 16px; padding: 16px; align-items: start; }
+.bancada-area { grid-area: placa; }
+.bancada-lateral { grid-area: lateral; }
+.painel-codigo { grid-area: codigo; }
+.bancada-corpo.com-codigo { grid-template-columns: minmax(0, 1fr) minmax(330px, 390px) 290px; grid-template-areas: "placa codigo lateral"; }
 .bancada-area { background: var(--mesa); border: var(--px) solid #0e0a14; box-shadow: inset 0 0 0 var(--px) var(--mesa-borda); padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .placa-rolagem { overflow-x: auto; }
-#placa { display: block; width: 100%; min-width: 720px; touch-action: manipulation; user-select: none; -webkit-user-select: none; shape-rendering: crispEdges; font-family: var(--f-pixel); }
+#placa { display: block; width: 100%; min-width: 620px; touch-action: manipulation; user-select: none; -webkit-user-select: none; shape-rendering: crispEdges; font-family: var(--f-pixel); }
 .bancada-status { display: flex; flex-direction: column; gap: 4px; padding: 4px 6px 2px; font-size: .98rem; line-height: 1.4; }
 .bancada-status .instrucao { font-weight: 600; }
 .bancada-status .conexao { color: #b9f3cf; min-height: 1.4em; }
@@ -258,6 +262,32 @@ h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .0
 .acao { border: 3px solid #1c1a22; padding: 9px; background: #4a4758; color: #f1ecf6; font-weight: 600; font-size: .95rem; box-shadow: inset -3px -3px 0 rgba(0, 0, 0, .25); }
 .acao:hover:not(:disabled) { background: #575467; }
 .acao:disabled { opacity: .45; }
+
+/* editor do Arduino: parece a IDE, com os blocos de comando */
+.painel-codigo { background: #17323a; border: var(--px) solid #0e0a14; box-shadow: inset 0 0 0 var(--px) #00979d; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.painel-codigo h3 { font-size: 1.05rem; color: #7fe3e8; font-weight: 600; }
+.painel-ajuda { margin: 0; font-size: .88rem; color: #b7d9dc; line-height: 1.4; }
+.editor-arduino { background: #0f1f24; border: 3px solid #0a1417; font-family: var(--f-mono); font-size: .82rem; color: #e6f2f3; overflow-x: auto; }
+.editor-topo { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; background: #00979d; color: #fff; font-family: var(--f-pixel); font-weight: 600; font-size: .9rem; }
+.rodando .estado-placa { color: #d4ffcf; }
+.funcao { padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; }
+.funcao + .funcao { border-top: 2px dashed #24434b; }
+.assinatura .kw { color: #4fc3f7; }
+.fn { color: #ffb86c; }
+.comentario, .vazio { color: #6f8f94; padding-left: 16px; }
+.linha-codigo { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 2px 4px 2px 12px; border-left: 3px solid transparent; min-width: max-content; }
+.linha-codigo:hover { background: #17323a; }
+.linha-codigo.executando { background: #2c4a1c; border-left-color: #8bff6b; }
+.linha-codigo .cod { white-space: nowrap; }
+.linha-codigo select { font: inherit; background: #0b1619; color: #c3f7a0; border: 2px solid #2d5a63; padding: 0; }
+.linha-codigo .ctrl { display: inline-flex; gap: 1px; flex: none; }
+.linha-codigo .ctrl button { border: 2px solid #2d5a63; background: #17323a; color: #b7d9dc; width: 21px; height: 21px; font-size: .62rem; line-height: 1; padding: 0; }
+.linha-codigo .ctrl button:hover { background: #24434b; color: #fff; }
+.adicionar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 4px 0 4px 16px; font-family: var(--f-pixel); }
+.adicionar > span { color: #7fe3e8; font-weight: 700; }
+.adicionar button { border: 2px solid #00979d; background: #0f2a2f; color: #bff4f6; padding: 2px 7px; font-size: .82rem; font-family: var(--f-mono); }
+.adicionar button:hover { background: #00979d; color: #fff; }
+.onda-som { animation: piscaCurto .3s steps(2) infinite; }
 
 /* peças na placa */
 .peca { cursor: pointer; }
@@ -297,8 +327,11 @@ h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .0
 .certificado .data { color: var(--tinta-suave); font-size: .95rem; }
 
 /* ------------------------------------------------------------ telas menores */
+@media (max-width: 1250px) {
+  .bancada-corpo.com-codigo { grid-template-columns: minmax(0, 1fr) 300px; grid-template-areas: "placa lateral" "codigo lateral"; }
+}
 @media (max-width: 900px) {
-  .bancada-corpo { grid-template-columns: minmax(0, 1fr); }
+  .bancada-corpo, .bancada-corpo.com-codigo { grid-template-columns: minmax(0, 1fr); grid-template-areas: "placa" "codigo" "lateral"; }
 }
 @media (max-width: 760px) {
   .cena-ilustracao { left: 12px; right: 12px; width: auto; padding: 8px; }

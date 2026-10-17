@@ -2,10 +2,10 @@
 
 Jogo online das oficinas do **LABe — Mulheres no Laboratório de Eletrônica** (projeto de extensão da UFABC).
 
-A participante entra no laboratório, conversa com as monitoras (estilo *visual novel*), responde perguntas
-e monta circuitos de verdade numa **bancada virtual**: protoboard, fonte de 5 V, resistores, LEDs, fios e
-multímetro. O simulador calcula tensões e correntes: o LED acende, fica fraquinho, ou **queima** se
-faltar o resistor.
+É um jogo em **pixel art**: a participante escolhe a personagem, entra no laboratório, conversa com as
+monitoras, responde perguntas e monta circuitos de verdade numa **bancada virtual**: protoboard, fonte
+de 5 V, resistores, LEDs, fios, multímetro e um **Arduino UNO** programável. O simulador calcula tensões
+e correntes: o LED acende, fica fraquinho, ou **queima** se faltar o resistor.
 
 ## Oficinas
 
@@ -14,6 +14,8 @@ faltar o resistor.
 3. **Protoboard e o primeiro LED**: como os furos se conectam, polaridade do LED, primeiro circuito.
 4. **Série e paralelo**: dois LEDs de cada jeito, na bancada.
 5. **Medindo com o multímetro**: medir a tensão no LED e no resistor e calcular a corrente.
+6. **Arduino: primeiros passos**: o que é o Arduino, pinout, `setup()` e `loop()`, e as práticas
+   *pisca LED* (pino 13) e *ativando o buzzer* (pino 8), com código montado em blocos.
 
 Ao concluir tudo, aparece um certificado de conclusão do jogo com o nome da participante.
 
@@ -31,7 +33,8 @@ oficinas sem precisar jogar na ordem.
 | --- | --- |
 | Falas, perguntas, ordem das oficinas, nomes das monitoras | `js/historia.js` |
 | Desafios da bancada (objetivo, peças da gaveta, dicas, quando conta como "certo") | `js/desafios.js` |
-| Desenhos (personagens, cenários, ilustrações das aulas) | `js/arte.js` |
+| Cenários e ilustrações das aulas | `js/arte.js` |
+| Comandos do Arduino e o editor em blocos | `js/arduino.js` |
 | Cores e visual | `css/estilo.css` |
 | Física do circuito (tensão da fonte, LEDs) | `js/simulador.js` |
 
@@ -49,6 +52,17 @@ Exemplo de passos em `js/historia.js`:
 
 As monitoras do jogo (Profª Helena, Bia e Nina) são personagens fictícias. Para usar nomes de monitoras
 reais, troque em `PERSONAGENS` (em `js/historia.js`), com a autorização delas.
+
+## Personagens (pixel art)
+
+Os desenhos ficam em `fotos/personagens/`, no formato do [Piskel](https://www.piskelapp.com/), com 32×32
+pixels por quadro, de perfil, viradas para a esquerda:
+
+- cada quadro dos arquivos `.piskel` vira uma personagem que a jogadora pode escolher;
+- `monitoras.piskel` tem Helena, Bia e Nina, nessa ordem (no jogo elas aparecem viradas para a direita).
+
+Depois de editar no Piskel, rode `py ferramentas/importar_personagens.py` para gerar `img/personagens.png`
+e `img/monitoras.png`. O jogo descobre sozinho quantas personagens existem.
 
 ## Testes
 

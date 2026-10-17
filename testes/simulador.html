@@ -6,6 +6,7 @@
 <script src="../js/arte.js"></script>
 <script src="../js/simulador.js"></script>
 <script src="../js/desafios.js"></script>
+<script src="../js/arduino.js"></script>
 <script>
   // Nos testes, o nome do furo é o próprio nó; "S1#a" e "S1#b" são dois furos da mesma coluna.
   const noBase = id => id.split('#')[0];
@@ -106,6 +107,50 @@
     afirmar(Arte.faixasDoValor(10000).join() === 'marrom,preto,laranja', '10k');
     afirmar(Arte.valorDasFaixas(['amarelo', 'violeta', 'vermelho']) === 4700, '4k7');
     afirmar(Arte.ohms(4700) === '4,7 kΩ', Arte.ohms(4700));
+  });
+
+  // ---------------------------------------------------------------- Arduino
+  const pino = (no, v, r = 25) => [{ no, v, r }];
+  teste('pino 13 em HIGH acende o LED com resistor', () => {
+    const r = Simulador.simular(pecas([R('D13', 'S1', 220), L('S1', 'TN')]), noBase, pino('D13', 5));
+    afirmar(r.leds[0].aceso && Math.abs(r.leds[0].corrente - 0.01245) < 0.0003, mA(r.leds[0].corrente));
+    return mA(r.leds[0].corrente);
+  });
+  teste('pino em LOW deixa o LED apagado', () => {
+    const r = Simulador.simular(pecas([R('D13', 'S1', 220), L('S1', 'TN')]), noBase, pino('D13', 0));
+    afirmar(!r.leds[0].aceso, 'aceso');
+  });
+  teste('sem pinMode (só pull-up) o LED fica quase apagado', () => {
+    const r = Simulador.simular(pecas([R('D13', 'S1', 220), L('S1', 'TN')]), noBase, pino('D13', 5, 35000));
+    afirmar(!r.leds[0].aceso && r.leds[0].corrente > 1e-5, mA(r.leds[0].corrente));
+  });
+  teste('buzzer no pino 8 apita; invertido não', () => {
+    const r1 = Simulador.simular(pecas([{ tipo: 'buzzer', a: 'D8', b: 'TN' }]), noBase, pino('D8', 5));
+    const r2 = Simulador.simular(pecas([{ tipo: 'buzzer', a: 'TN', b: 'D8' }]), noBase, pino('D8', 5));
+    afirmar(r1.buzzers[0].soando && !r2.buzzers[0].soando && r2.buzzers[0].invertido, 'buzzer errado');
+    return mA(r1.buzzers[0].corrente);
+  });
+  teste('pino em HIGH ligado direto no GND é curto no pino', () => {
+    const r = Simulador.simular(pecas([F('D13', 'TN')]), noBase, pino('D13', 5));
+    afirmar(r.curtoPino === 'D13', String(r.curtoPino));
+  });
+  teste('interpretador: Blink deixa o pino 13 em HIGH até o primeiro delay', () => {
+    Arduino.iniciar({ editor: document.createElement('div') });
+    const p = Arduino.programa;
+    p.setup.push({ cmd: 'pinMode', pino: 13, modo: 'OUTPUT' });
+    p.loop.push({ cmd: 'digitalWrite', pino: 13, valor: 'HIGH' }, { cmd: 'delay', ms: 1000 }, { cmd: 'digitalWrite', pino: 13, valor: 'LOW' }, { cmd: 'delay', ms: 1000 });
+    Arduino.enviar();
+    const f = Arduino.fontes();
+    Arduino.parar(false);
+    afirmar(f.length === 1 && f[0].no === 'D13' && f[0].v === 5, JSON.stringify(f));
+  });
+  teste('dica: avisa quando falta o pinMode', () => {
+    Arduino.iniciar({ editor: document.createElement('div') });
+    Arduino.programa.loop.push({ cmd: 'digitalWrite', pino: 13, valor: 'HIGH' }, { cmd: 'delay', ms: 500 }, { cmd: 'digitalWrite', pino: 13, valor: 'LOW' }, { cmd: 'delay', ms: 500 });
+    Arduino.enviar();
+    const d = dicaArduino({ arduino: { rodando: true, programa: Arduino.programa, pinos: Arduino.pinos } }, 13);
+    Arduino.parar(false);
+    afirmar(d && /pinMode/.test(d.texto), d ? d.texto : 'sem dica');
   });
 
   const falhas = resultados.filter(r => r.startsWith('FALHA')).length;

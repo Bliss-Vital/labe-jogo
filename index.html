@@ -25,7 +25,7 @@
         <li><span class="passo-icone" data-icone="resistor"></span><span><strong>Escolha sua personagem</strong> e entre no laboratório.</span></li>
         <li><span class="passo-icone" data-icone="multimetro"></span><span><strong>Converse com as monitoras</strong> e aprenda tensão, corrente, resistores e LEDs.</span></li>
         <li><span class="passo-icone" data-icone="protoboard"></span><span><strong>Monte circuitos na bancada</strong>: acenda LEDs, ligue em série e em paralelo, meça com o multímetro.</span></li>
-        <li><span class="passo-icone" data-icone="led"></span><span><strong>Complete as 5 oficinas</strong> e ganhe seu certificado.</span></li>
+        <li><span class="passo-icone" data-icone="arduino"></span><span><strong>Programe um Arduino</strong> e, completando as oficinas, ganhe seu certificado.</span></li>
       </ol>
       <div class="acoes-abertura">
         <button type="button" class="btn btn-grande btn-rosa" id="btn-comecar">Começar</button>
@@ -108,6 +108,11 @@
           <span class="conexao" id="status-conexao"></span>
         </div>
       </div>
+      <section class="painel-codigo" id="painel-codigo" hidden aria-label="Código do Arduino">
+        <h3>Código do Arduino</h3>
+        <p class="painel-ajuda">Clique nos comandos para adicionar, escolha os valores e depois envie para a placa.</p>
+        <div class="editor-arduino" id="editor-arduino"></div>
+      </section>
       <aside class="bancada-lateral">
         <div class="dica-monitora" id="dica-monitora" aria-live="polite">
           <div class="dica-avatar" id="dica-avatar"></div>
@@ -151,6 +156,7 @@
 <script src="js/simulador.js"></script>
 <script src="js/historia.js"></script>
 <script src="js/desafios.js"></script>
+<script src="js/arduino.js"></script>
 <script src="js/bancada.js"></script>
 <script src="js/motor.js"></script>
 </body>

@@ -22,6 +22,8 @@
     correntePlena: 0.015,   // 15 mA = brilho máximo
     correnteQueima: 0.045,  // acima de 45 mA o LED queima
   };
+  // Buzzer ativo: conduz só do + para o − e apita a partir de 5 mA. Não queima.
+  const BUZZER = { tensao: 1, resistencia: 120, correnteSom: 0.005 };
 
   function criarUniao() {
     const pai = new Map();
@@ -65,12 +67,14 @@
   }
 
   /*
-   * pecas: [{ tipo: 'fio'|'resistor'|'led', a, b, valor?, cor?, queimado? }]
-   *        no LED, "a" é o ânodo (perna longa) e "b" é o cátodo.
+   * pecas: [{ tipo: 'fio'|'resistor'|'led'|'buzzer', a, b, valor?, cor?, queimado? }]
+   *        no LED e no buzzer, "a" é a perna + e "b" é a perna −.
    * noDoFuro(furo): nome do nó "físico" do furo (ex.: 'S3' = coluna 3 de cima).
    *        As trilhas da fonte são 'TP'/'BP' (+) e 'TN'/'BN' (−).
+   * extras: fontes a mais, como os pinos do Arduino: [{ no: 'D13', v: 5, r: 25 }]
+   *        (v em volts em relação ao −, r = resistência interna em ohms).
    */
-  function calcular(pecas, noDoFuro) {
+  function calcular(pecas, noDoFuro, extras = []) {
     const uniao = criarUniao();
     uniao.unir('TP', 'BP');
     uniao.unir('TN', 'BN');
@@ -79,7 +83,7 @@
     const no = furo => uniao.achar(noDoFuro(furo));
     const POS = uniao.achar('TP');
     const NEG = uniao.achar('TN');
-    const leds = pecas.filter(p => p.tipo === 'led');
+    const leds = pecas.filter(p => p.tipo === 'led' || p.tipo === 'buzzer');
     const resistores = pecas.filter(p => p.tipo === 'resistor');
 
     // numeração dos nós; o negativo da fonte é a referência (0 V)
@@ -92,19 +96,34 @@
 
     let x = new Float64Array(0);
     const v = i => (i < 0 ? 0 : x[i]);
-    const res = { no, curto: POS === NEG, correnteFonte: 0, leds: [], resistores: [] };
+    const res = { no, curto: POS === NEG, curtoPino: null, correnteFonte: 0, leds: [], buzzers: [], resistores: [] };
     res.tensaoNo = n => (n === NEG ? 0 : indice.has(n) ? x[indice.get(n)] : 0);
     res.tensao = furo => res.tensaoNo(no(furo));
 
     if (res.curto) {
-      res.leds = leds.map(p => ({ peca: p, vak: 0, corrente: 0, aceso: false, brilho: 0, invertido: false, emCurto: no(p.a) === no(p.b) }));
+      res.leds = leds.filter(p => p.tipo === 'led').map(p => ({ peca: p, vak: 0, corrente: 0, aceso: false, brilho: 0, invertido: false, emCurto: no(p.a) === no(p.b) }));
+      res.buzzers = leds.filter(p => p.tipo === 'buzzer').map(p => ({ peca: p, vak: 0, corrente: 0, soando: false, invertido: false }));
       res.resistores = resistores.map(p => ({ peca: p, tensao: 0, corrente: 0 }));
       return res;
     }
 
     const iPos = idx(POS);
+    // um pino ligado direto no + ou no − com tensão diferente é um curto no pino
+    const fontes = [];
+    for (const f of extras) {
+      const raiz = uniao.achar(f.no);
+      if ((raiz === NEG && f.v > 0) || (raiz === POS && f.v < FONTE_V)) { res.curtoPino = f.no; continue; }
+      if (raiz !== NEG && raiz !== POS) fontes.push({ i: idx(raiz), v: f.v, g: 1 / f.r });
+    }
     const rs = resistores.map(p => ({ peca: p, i: idx(no(p.a)), j: idx(no(p.b)) }));
-    const ls = leds.map(p => ({ peca: p, a: idx(no(p.a)), k: idx(no(p.b)), vf: LED.tensao[p.cor] || 2, conduz: !p.queimado }));
+    const ls = leds.map(p => {
+      const buzzer = p.tipo === 'buzzer';
+      return {
+        peca: p, buzzer, a: idx(no(p.a)), k: idx(no(p.b)), conduz: !p.queimado,
+        vf: buzzer ? BUZZER.tensao : LED.tensao[p.cor] || 2,
+        rs: buzzer ? BUZZER.resistencia : LED.resistencia,
+      };
+    });
     const n = indice.size;
 
     // O LED não é linear: chutamos quais conduzem, resolvemos e corrigimos até estabilizar.
@@ -119,10 +138,11 @@
       for (let i = 0; i < n; i++) A[i][i] += G_MIN;
       condutancia(iPos, -1, 1 / FONTE_R);
       b[iPos] += FONTE_V / FONTE_R;
+      for (const f of fontes) { condutancia(f.i, -1, f.g); b[f.i] += f.v * f.g; }
       for (const r of rs) condutancia(r.i, r.j, 1 / r.peca.valor);
       for (const l of ls) {
         if (!l.conduz) { condutancia(l.a, l.k, G_MIN); continue; }
-        const g = 1 / LED.resistencia;
+        const g = 1 / l.rs;
         condutancia(l.a, l.k, g);
         if (l.a >= 0) b[l.a] += g * l.vf;
         if (l.k >= 0) b[l.k] -= g * l.vf;
@@ -140,9 +160,16 @@
     }
 
     res.correnteFonte = (FONTE_V - v(iPos)) / FONTE_R;
-    res.leds = ls.map(l => {
+    const medir = l => {
       const vak = v(l.a) - v(l.k);
-      const corrente = l.peca.queimado ? 0 : l.conduz ? (vak - l.vf) / LED.resistencia : vak * G_MIN;
+      return [vak, l.peca.queimado ? 0 : l.conduz ? (vak - l.vf) / l.rs : vak * G_MIN];
+    };
+    res.buzzers = ls.filter(l => l.buzzer).map(l => {
+      const [vak, corrente] = medir(l);
+      return { peca: l.peca, vak, corrente, soando: corrente >= BUZZER.correnteSom, invertido: vak < -0.5 };
+    });
+    res.leds = ls.filter(l => !l.buzzer).map(l => {
+      const [vak, corrente] = medir(l);
       return {
         peca: l.peca,
         vak,
@@ -162,10 +189,10 @@
 
   // Igual a calcular(), mas queima (de verdade!) os LEDs com corrente demais.
   // Queima um por vez: num LED em série, quando o primeiro abre, a corrente para.
-  function simular(pecas, noDoFuro) {
+  function simular(pecas, noDoFuro, extras = []) {
     const queimouAgora = [];
     for (;;) {
-      const res = calcular(pecas, noDoFuro);
+      const res = calcular(pecas, noDoFuro, extras);
       let pior = null;
       for (const l of res.leds) if (l.corrente > LED.correnteQueima && (!pior || l.corrente > pior.corrente)) pior = l;
       if (!pior) { res.queimouAgora = queimouAgora; return res; }
@@ -174,5 +201,5 @@
     }
   }
 
-  raiz.Simulador = { simular, FONTE_V, LED };
+  raiz.Simulador = { simular, FONTE_V, LED, BUZZER };
 })(typeof window !== 'undefined' ? window : globalThis);

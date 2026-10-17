@@ -39,9 +39,18 @@ const Bancada = (() => {
       }
     }
   }
+  // Pinos do Arduino UNO (só aparecem nos desafios de Arduino). O 5V e o GND são as trilhas + e −.
+  const ARD_X = 160;
+  const PINOS_ARDUINO = [
+    { id: 'ard5V', rotulo: '5V', y: 72, no: 'TP' }, { id: 'ardGND1', rotulo: 'GND', y: 98, no: 'TN' },
+    { id: 'ardGND2', rotulo: 'GND', y: 160, no: 'TN' },
+    ...[13, 12, 11, 10, 9, 8, 7].map((p, i) => ({ id: 'ard' + p, rotulo: ([11, 10, 9].includes(p) ? '~' : '') + p, y: 186 + i * 26, no: 'D' + p })),
+  ];
+  for (const p of PINOS_ARDUINO) furos.set(p.id, { id: p.id, x: ARD_X, y: p.y, no: p.no, arduino: p.rotulo });
   const noBase = id => furos.get(id).no;
   const grupos = new Map();
   for (const f of furos.values()) {
+    if (f.arduino) continue;
     if (!grupos.has(f.no)) grupos.set(f.no, []);
     grupos.get(f.no).push(f);
   }
@@ -65,6 +74,10 @@ const Bancada = (() => {
   let hover = null;
   let historico = [];
   let contador = 0;
+  let modoArduino = false;
+  const energizada = () => (modoArduino ? Arduino.rodando : ligada);
+  // para saber se algo piscou/apitou: conta as vezes que apagou depois de aceso
+  let piscadas = {}, bipes = {}, antes = {};
   const recemQueimados = new Set();
   const som = nome => { if (typeof Som !== 'undefined') Som.tocar(nome); };
 
@@ -84,9 +97,15 @@ const Bancada = (() => {
   function nomePeca(p) {
     if (p.tipo === 'resistor') return `O resistor de ${Arte.ohms(p.valor)}`;
     if (p.tipo === 'led') return `O LED ${p.cor}`;
+    if (p.tipo === 'buzzer') return 'O buzzer';
     return 'O fio';
   }
   function descreverFuro(f) {
+    if (f.arduino) {
+      if (f.no === 'TP') return 'Pino 5V do Arduino: já está ligado na trilha + da protoboard.';
+      if (f.no === 'TN') return 'Pino GND (terra, 0 V) do Arduino: já está ligado na trilha − da protoboard.';
+      return `Pino digital ${f.arduino} do Arduino: o programa liga (HIGH = 5 V) e desliga (LOW = 0 V) este pino.`;
+    }
     if (f.trilha) {
       const t = TRILHAS[f.trilha];
       return `Trilha ${t.sinal}: todos os furos desta linha estão ligados ao ${t.sinal === '+' ? 'positivo (+)' : 'negativo (−)'} da fonte.`;
@@ -110,11 +129,52 @@ const Bancada = (() => {
       s += `<text x="${xCol(c)}" y="${yLinha(9) + 20}" font-size="9" fill="#9a978e" text-anchor="middle">${c + 1}</text>`;
     }
     for (let l = 0; l < 10; l++) s += `<text x="${BX + 12}" y="${yLinha(l) + 3.5}" font-size="10" fill="#9a978e" text-anchor="middle">${LINHAS[l]}</text>`;
-    for (const f of furos.values()) s += `<rect x="${f.x - 4.5}" y="${f.y - 4.5}" width="9" height="9" rx="2" fill="#3b3b3b"/>`;
+    for (const f of furos.values()) if (!f.arduino) s += `<rect x="${f.x - 4.5}" y="${f.y - 4.5}" width="9" height="9" rx="2" fill="#3b3b3b"/>`;
     return s;
   }
 
+  // fio fixo de um ponto até a ponta esquerda de uma trilha
+  function fioFixo(de, trilha, cor) {
+    const ate = { x: BX + 10, y: TRILHAS[trilha].y };
+    return `<path d="M${de.x} ${de.y} C ${de.x + 30} ${de.y + (ate.y < de.y ? -60 : 60)}, ${ate.x - 50} ${ate.y}, ${ate.x} ${ate.y}" stroke="${cor}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  }
+  const presilhas = () => Object.keys(TRILHAS).map(t => `<rect x="${BX + 6}" y="${TRILHAS[t].y - 4}" width="8" height="8" rx="2" fill="#b8bcc2"/>`).join('');
+
+  function desenharArduino() {
+    const ligado = Arduino.rodando;
+    const p13 = Arduino.pinos[13];
+    const l13 = ligado && (p13.tom || (p13.modo === 'OUTPUT' && p13.valor === 'HIGH'));
+    let s = `
+      <rect x="34" y="8" width="52" height="46" fill="#c9ced6" stroke="#8a909a" stroke-width="2"/>
+      <rect x="104" y="12" width="44" height="38" fill="#222"/>
+      <rect x="14" y="26" width="166" height="384" rx="6" fill="#1d5fa0" stroke="#123f6e" stroke-width="3"/>
+      <rect x="24" y="72" width="14" height="14" fill="#d62828" stroke="#7a1010" stroke-width="2"/>
+      <text x="31" y="100" font-size="8" fill="#cfe3f5" text-anchor="middle">RESET</text>
+      <circle cx="58" cy="128" r="10" fill="none" stroke="#fff" stroke-width="3"/><circle cx="78" cy="128" r="10" fill="none" stroke="#fff" stroke-width="3"/>
+      <text x="58" y="132" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">−</text><text x="78" y="132" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">+</text>
+      <text x="68" y="162" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">UNO</text>
+      <rect x="48" y="200" width="40" height="150" fill="#1b1b1b"/>
+      ${Array.from({ length: 10 }, (_, i) => `<rect x="44" y="${206 + i * 14}" width="4" height="6" fill="#b8bcc2"/><rect x="88" y="${206 + i * 14}" width="4" height="6" fill="#b8bcc2"/>`).join('')}
+      <text x="68" y="280" font-size="8" fill="#888" text-anchor="middle" transform="rotate(-90 68 280)">ATMEGA328P</text>
+      <rect x="112" y="70" width="10" height="6" fill="${ligado ? '#2ee66b' : '#245238'}"/>
+      <text x="117" y="88" font-size="8" fill="#cfe3f5" text-anchor="middle">ON</text>
+      ${l13 ? '<rect x="104" y="176" width="26" height="18" fill="#ffb43b" opacity=".35"/>' : ''}
+      <rect x="112" y="182" width="10" height="6" fill="${l13 ? '#ffb43b' : '#6b4a1e'}"/>
+      <text x="117" y="200" font-size="8" fill="#cfe3f5" text-anchor="middle">L</text>
+      <text x="96" y="428" font-size="12" font-weight="700" fill="#cfc8da" text-anchor="middle" letter-spacing="1">ARDUINO UNO</text>
+      <rect x="${ARD_X - 9}" y="60" width="18" height="50" fill="#111"/>
+      <rect x="${ARD_X - 9}" y="148" width="18" height="${PINOS_ARDUINO[PINOS_ARDUINO.length - 1].y - 136}" fill="#111"/>`;
+    for (const p of PINOS_ARDUINO) {
+      s += `<rect x="${ARD_X - 4.5}" y="${p.y - 4.5}" width="9" height="9" fill="#3b3b3b" stroke="#c9a227" stroke-width="1.5"/>`;
+      s += `<text x="${ARD_X - 14}" y="${p.y + 3.5}" font-size="10" font-weight="700" fill="#fff" text-anchor="end">${p.rotulo}</text>`;
+    }
+    const v5 = furos.get('ard5V'), gnd = furos.get('ardGND1');
+    s += fioFixo(v5, 'tp', '#e63946') + fioFixo(v5, 'bp', '#e63946') + fioFixo(gnd, 'tn', '#26262b') + fioFixo(gnd, 'bn', '#26262b') + presilhas();
+    camadas.fonte.innerHTML = s;
+  }
+
   function desenharFonte() {
+    if (modoArduino) { desenharArduino(); return; }
     const curto = resultado && resultado.curto;
     const vTxt = !ligada ? '-.-- V' : curto ? 'CURTO!' : `${Simulador.FONTE_V.toFixed(2)} V`;
     const iTxt = ligada && !curto && resultado ? fmtCorrente(resultado.correnteFonte) : '';
@@ -135,11 +195,7 @@ const Bancada = (() => {
       <circle cx="${pos.x}" cy="${pos.y}" r="11" fill="#d62828" stroke="#8b1414" stroke-width="2"/>
       <circle cx="${neg.x}" cy="${neg.y}" r="11" fill="#151515" stroke="#555" stroke-width="2"/>`;
     // fios fixos da fonte até as trilhas
-    const ponta = (t) => ({ x: BX + 10, y: TRILHAS[t].y });
-    const fio = (de, ate, cor) => `<path d="M${de.x} ${de.y} C ${de.x + 30} ${de.y + (ate.y < de.y ? -60 : 60)}, ${ate.x - 50} ${ate.y}, ${ate.x} ${ate.y}" stroke="${cor}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
-    s += fio(pos, ponta('tp'), '#e63946') + fio(pos, ponta('bp'), '#e63946');
-    s += fio(neg, ponta('tn'), '#26262b') + fio(neg, ponta('bn'), '#26262b');
-    for (const t of Object.keys(TRILHAS)) s += `<rect x="${BX + 6}" y="${TRILHAS[t].y - 4}" width="8" height="8" rx="2" fill="#b8bcc2"/>`;
+    s += fioFixo(pos, 'tp', '#e63946') + fioFixo(pos, 'bp', '#e63946') + fioFixo(neg, 'tn', '#26262b') + fioFixo(neg, 'bn', '#26262b') + presilhas();
     camadas.fonte.innerHTML = s;
   }
 
@@ -209,17 +265,33 @@ const Bancada = (() => {
     return s + '</g>';
   }
 
+  function desenharBuzzer(p, A, B, info, extra = '') {
+    const { mx, my } = geometria(A, B);
+    const soando = info && info.soando;
+    let s = `<g class="peca buzzer${extra}" data-peca="${p.id}">
+      <line x1="${A.x}" y1="${A.y}" x2="${mx}" y2="${my}" stroke="#a7adb4" stroke-width="2.6"/>
+      <line x1="${B.x}" y1="${B.y}" x2="${mx}" y2="${my}" stroke="#a7adb4" stroke-width="2.6"/>
+      <circle cx="${mx}" cy="${my}" r="13" fill="#1b1b1b" stroke="#4a4a4a" stroke-width="2"/>
+      <circle cx="${mx}" cy="${my}" r="3.5" fill="#555"/>
+      <text x="${A.x - 8}" y="${A.y - 7}" font-size="11" font-weight="900" fill="#d62828" text-anchor="middle">+</text>`;
+    if (soando) {
+      s += [18, 25].map(r => `<path d="M${mx + r * 0.7} ${my - r * 0.7} A${r} ${r} 0 0 1 ${mx + r * 0.7} ${my + r * 0.7} M${mx - r * 0.7} ${my - r * 0.7} A${r} ${r} 0 0 0 ${mx - r * 0.7} ${my + r * 0.7}" stroke="#ff6ec7" stroke-width="2.5" fill="none" class="onda-som"/>`).join('');
+    }
+    return s + `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="transparent" stroke-width="16"/></g>`;
+  }
+
   function desenharPecas() {
-    const infoLed = new Map();
-    if (resultado) for (const l of resultado.leds) infoLed.set(l.peca.id, l);
-    const ordem = { fio: 0, resistor: 1, led: 2 };
+    const info = new Map();
+    if (resultado) for (const l of [...resultado.leds, ...resultado.buzzers]) info.set(l.peca.id, l);
+    const ordem = { fio: 0, resistor: 1, led: 2, buzzer: 2 };
     let s = '';
     for (const p of [...pecas].sort((a, b) => ordem[a.tipo] - ordem[b.tipo])) {
       const A = furos.get(p.a), B = furos.get(p.b);
       const extra = selecionada === p.id ? ' selecionada' : '';
       if (p.tipo === 'fio') s += desenharFio(p, A, B, extra);
       else if (p.tipo === 'resistor') s += desenharResistor(p, A, B, extra);
-      else s += desenharLed(p, A, B, infoLed.get(p.id), extra);
+      else if (p.tipo === 'buzzer') s += desenharBuzzer(p, A, B, info.get(p.id), extra);
+      else s += desenharLed(p, A, B, info.get(p.id), extra);
     }
     camadas.pecas.innerHTML = s;
   }
@@ -290,7 +362,8 @@ const Bancada = (() => {
     let s = `<circle cx="${A.x}" cy="${A.y}" r="8" fill="none" stroke="#ff6ec7" stroke-width="3"/>`;
     if (hover && hover.id !== primeiro) {
       const p = { id: 'previa', tipo: ferramenta.tipo, a: primeiro, b: hover.id, valor: ferramenta.valor, cor: ferramenta.cor };
-      s += `<g opacity=".55" style="pointer-events:none">${p.tipo === 'fio' ? desenharFio(p, A, hover) : p.tipo === 'resistor' ? desenharResistor(p, A, hover) : desenharLed(p, A, hover, null)}</g>`;
+      const d = { fio: desenharFio, resistor: desenharResistor }[p.tipo];
+      s += `<g opacity=".55" style="pointer-events:none">${d ? d(p, A, hover) : p.tipo === 'buzzer' ? desenharBuzzer(p, A, hover, null) : desenharLed(p, A, hover, null)}</g>`;
     }
     camadas.previa.innerHTML = s;
   }
@@ -311,6 +384,9 @@ const Bancada = (() => {
   function miniLed(cor) {
     return `<svg viewBox="-24 -12 48 24"><path d="M-20 0 H20" stroke="#a7adb4" stroke-width="2"/><circle r="9" fill="${Arte.COR_LED[cor]}"/><circle cx="-3" cy="-3" r="2.5" fill="#fff" opacity=".6"/></svg>`;
   }
+  function miniBuzzer() {
+    return `<svg viewBox="-24 -12 48 24"><path d="M-20 0 H20" stroke="#a7adb4" stroke-width="2"/><circle r="10" fill="#1b1b1b" stroke="#666" stroke-width="2"/><circle r="3" fill="#666"/></svg>`;
+  }
   function miniSonda(cor) {
     return `<svg viewBox="-24 -8 48 16"><path d="M-22 0 H10" stroke="${cor}" stroke-width="7" stroke-linecap="round"/><path d="M10 0 H22" stroke="#d9dde2" stroke-width="3" stroke-linecap="round"/></svg>`;
   }
@@ -326,6 +402,7 @@ const Bancada = (() => {
     let html = '';
     if (g.resistores && g.resistores.length) html += grupo('Resistores', g.resistores.map(v => item({ tipo: 'resistor', valor: v }, miniResistor(v), Arte.ohms(v))));
     if (g.leds && g.leds.length) html += grupo('LEDs', g.leds.map(c => item({ tipo: 'led', cor: c }, miniLed(c), c)));
+    if (g.buzzer) html += grupo('Buzzer', [item({ tipo: 'buzzer' }, miniBuzzer(), 'buzzer')]);
     if (g.fios) html += grupo('Fios (jumpers)', CORES_FIO.map(c => item({ tipo: 'fio', cor: c.hex }, `<span class="amostra-fio" style="--cor:${c.hex}"></span>`, c.nome)));
     if (g.multimetro) html += grupo('Pontas do multímetro', [item({ tipo: 'sonda', qual: 'v' }, miniSonda('#d62828'), 'vermelha (VΩ)'), item({ tipo: 'sonda', qual: 'p' }, miniSonda('#1a1a1a'), 'preta (COM)')]);
     el.gaveta.innerHTML = html;
@@ -335,8 +412,8 @@ const Bancada = (() => {
     el.gaveta.querySelectorAll('.item-gaveta').forEach(b => {
       b.classList.toggle('ativo', ferramenta === ferramentas[+b.dataset.i]);
     });
-    el.fonte.classList.toggle('ligada', ligada);
-    el.fonte.textContent = ligada ? 'Desligar fonte' : 'Ligar fonte';
+    el.fonte.classList.toggle('ligada', energizada());
+    el.fonte.textContent = modoArduino ? (Arduino.rodando ? '■ Parar o Arduino' : '▶ Enviar código para o Arduino') : (ligada ? 'Desligar fonte' : 'Ligar fonte');
     el.remover.disabled = !selecionada;
     const p = pecas.find(x => x.id === selecionada);
     el.inverter.disabled = !p;
@@ -351,6 +428,7 @@ const Bancada = (() => {
     if (f) {
       if (f.tipo === 'sonda') t = `Clique no furo onde quer encostar a ponta ${f.qual === 'v' ? 'vermelha' : 'preta'} do multímetro.`;
       else if (f.tipo === 'led') t = primeiro ? 'Agora clique no furo da perna CURTA do LED (cátodo, −).' : `LED ${f.cor}: clique no furo da perna LONGA (ânodo, +).`;
+      else if (f.tipo === 'buzzer') t = primeiro ? 'Agora clique no furo da perna − do buzzer.' : 'Buzzer: clique no furo da perna + (a mais longa).';
       else if (f.tipo === 'resistor') t = primeiro ? 'Agora clique no furo da outra perna.' : `Resistor de ${Arte.ohms(f.valor)}: clique no furo da primeira perna.`;
       else t = primeiro ? 'Agora clique no furo onde o fio termina.' : 'Fio: clique no furo onde o fio começa.';
       t += ' (Esc cancela)';
@@ -366,8 +444,25 @@ const Bancada = (() => {
   const copiar = () => ({ pecas: pecas.map(p => ({ ...p })), sondas: { ...sondas } });
   function guardar() { historico.push(copiar()); if (historico.length > 80) historico.shift(); }
 
-  function mudou() {
-    resultado = ligada ? Simulador.simular(pecas, noBase) : null;
+  // conta quantas vezes cada LED apagou depois de aceso (e cada buzzer parou de apitar)
+  function contarEventos() {
+    if (!resultado || !modoArduino) { antes = {}; return; }
+    for (const l of resultado.leds) {
+      if (antes[l.peca.id] && !l.aceso) piscadas[l.peca.id] = (piscadas[l.peca.id] || 0) + 1;
+      antes[l.peca.id] = l.aceso;
+    }
+    for (const z of resultado.buzzers) {
+      const k = 'z' + z.peca.id;
+      if (antes[k] && !z.soando) bipes[z.peca.id] = (bipes[z.peca.id] || 0) + 1;
+      antes[k] = z.soando;
+    }
+  }
+
+  // motivo: 'pinos' quando só o programa do Arduino mudou a tensão de um pino
+  function mudou(motivo = 'montagem') {
+    resultado = energizada() ? Simulador.simular(pecas, noBase, modoArduino ? Arduino.fontes() : []) : null;
+    contarEventos();
+    if (modoArduino) Arduino.somBuzzer(!!resultado && resultado.buzzers.some(z => z.soando), Arduino.frequenciaTocando() || 1400);
     if (resultado && resultado.queimouAgora.length) {
       resultado.queimouAgora.forEach(p => recemQueimados.add(p.id));
       som('estouro');
@@ -376,12 +471,13 @@ const Bancada = (() => {
       som('erro');
     }
     desenharTudo();
-    if (config && config.aoMudar) config.aoMudar(contexto());
+    if (config && config.aoMudar) config.aoMudar(Object.assign(contexto(), { motivo }));
   }
 
   function contexto() {
     return {
-      pecas, sondas, ligada, res: resultado,
+      pecas, sondas, ligada: energizada(), res: resultado,
+      arduino: modoArduino ? { rodando: Arduino.rodando, programa: Arduino.programa, pinos: Arduino.pinos, piscadas, bipes } : null,
       leitura: leituraMultimetro(),
       // as duas pernas no mesmo grupo de furos (mesma coluna ou mesma trilha)?
       mesmaColuna: p => noBase(p.a) === noBase(p.b),
@@ -462,8 +558,9 @@ const Bancada = (() => {
   }
 
   function alternarFonte() {
-    ligada = !ligada;
     som('clique');
+    if (modoArduino) { if (Arduino.rodando) Arduino.parar(); else Arduino.enviar(); return; }
+    ligada = !ligada;
     mudou();
   }
 
@@ -476,6 +573,7 @@ const Bancada = (() => {
   function furoMaisProximo(pt) {
     let melhor = null, dm = (P * 0.55) ** 2;
     for (const f of furos.values()) {
+      if (f.arduino && !modoArduino) continue;
       const d = (f.x - pt.x) ** 2 + (f.y - pt.y) ** 2;
       if (d < dm) { dm = d; melhor = f; }
     }
@@ -506,7 +604,7 @@ const Bancada = (() => {
 
   function aoTeclar(ev) {
     if (!config || !document.getElementById('tela-bancada').classList.contains('ativa')) return;
-    if (ev.target.closest && ev.target.closest('input, textarea')) return;
+    if (ev.target.closest && ev.target.closest('input, textarea, select')) return;
     if (ev.key === 'Escape') { ferramenta = null; primeiro = null; selecionada = null; desenharTudo(); }
     else if (ev.key === 'Delete' || ev.key === 'Backspace') { if (selecionada) { ev.preventDefault(); remover(); } }
     else if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z') { ev.preventDefault(); desfazer(); }
@@ -543,18 +641,29 @@ const Bancada = (() => {
   }
 
   // ---------------------------------------------------------------- API
-  // cfg: { gaveta: {resistores, leds, fios, multimetro}, manterMontagem, aoMudar(ctx) }
+  // cfg: { gaveta: {resistores, leds, buzzer, fios, multimetro, arduino, comandos}, manterMontagem, aoMudar(ctx) }
   function iniciar(cfg) {
     preparar();
     config = cfg;
+    modoArduino = !!cfg.gaveta.arduino;
     if (!cfg.manterMontagem) { pecas = []; sondas = { v: null, p: null }; historico = []; ligada = false; }
     ferramenta = null; primeiro = null; selecionada = null; hover = null;
+    piscadas = {}; bipes = {}; antes = {};
+    svg.setAttribute('viewBox', `0 0 ${cfg.gaveta.multimetro ? W : BX + LARG + 16} ${H}`);
     el.conexao.textContent = '';
+    document.getElementById('painel-codigo').hidden = !modoArduino;
+    document.querySelector('.bancada-corpo').classList.toggle('com-codigo', modoArduino);
+    if (modoArduino) {
+      Arduino.iniciar({
+        editor: document.getElementById('editor-arduino'), comandos: cfg.gaveta.comandos, manter: cfg.manterMontagem,
+        aoMudar: motivo => { if (motivo === 'enviou') { piscadas = {}; bipes = {}; antes = {}; } mudou(motivo || 'pinos'); },
+      });
+    } else Arduino.parar(false);
     montarGaveta();
     mudou();
   }
 
-  function parar() { config = null; ferramenta = null; primeiro = null; }
+  function parar() { config = null; ferramenta = null; primeiro = null; if (modoArduino) Arduino.parar(false); }
 
   return { iniciar, parar };
 })();

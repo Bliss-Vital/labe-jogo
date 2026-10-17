@@ -61,8 +61,32 @@ const Arte = (() => {
       ${aceso ? '<circle cx="0" cy="-20" r="6" fill="#fff" opacity=".7"/>' : ''}`;
   }
 
+  // Arduino UNO visto de cima, 300×210, com o canto em (0,0). destaque13: LED L aceso.
+  function placaArduino({ destaque13 = false } = {}) {
+    let s = `<rect x="-18" y="22" width="62" height="50" fill="#c9ced6" stroke="#8a909a" stroke-width="2"/>
+      <rect x="-12" y="140" width="52" height="44" fill="#222"/>
+      <rect width="300" height="210" rx="10" fill="#1d5fa0" stroke="#123f6e" stroke-width="3"/>
+      <rect x="18" y="6" width="18" height="18" fill="#d62828" stroke="#7a1010" stroke-width="2"/>
+      <rect x="110" y="6" width="180" height="16" fill="#111"/>
+      <rect x="60" y="188" width="90" height="16" fill="#111"/><rect x="175" y="188" width="90" height="16" fill="#111"/>
+      <rect x="150" y="120" width="120" height="34" fill="#1b1b1b"/>
+      <circle cx="80" cy="92" r="13" fill="none" stroke="#fff" stroke-width="4"/><circle cx="106" cy="92" r="13" fill="none" stroke="#fff" stroke-width="4"/>
+      <text x="80" y="97" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">−</text><text x="106" y="97" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">+</text>
+      <text x="200" y="88" font-size="30" font-weight="700" fill="#fff" text-anchor="middle" font-family="${FONTE}">UNO</text>
+      <rect x="96" y="30" width="10" height="6" fill="${destaque13 ? '#ffb43b' : '#6b4a1e'}"/><text x="101" y="48" font-size="9" fill="#cfe3f5" text-anchor="middle">L</text>
+      <rect x="60" y="30" width="10" height="6" fill="#2ee66b"/><text x="65" y="48" font-size="9" fill="#cfe3f5" text-anchor="middle">ON</text>`;
+    for (let i = 0; i < 16; i++) s += `<rect x="${114 + i * 11}" y="10" width="6" height="7" fill="#c9a227"/>`;
+    for (let i = 0; i < 8; i++) s += `<rect x="${64 + i * 11}" y="192" width="6" height="7" fill="#c9a227"/><rect x="${179 + i * 11}" y="192" width="6" height="7" fill="#c9a227"/>`;
+    for (let i = 0; i < 14; i++) s += `<rect x="${154 + i * 8}" y="114" width="4" height="6" fill="#b8bcc2"/><rect x="${154 + i * 8}" y="154" width="4" height="6" fill="#b8bcc2"/>`;
+    return s;
+  }
+
   // ---------------------------------------------------------------- ícones (caixa 120×100)
   const ICONES = {
+    arduino: () => `<g transform="translate(14 18) scale(.31)">${placaArduino()}</g>`,
+    buzzer: () => `<path d="M48 70 V96 M72 70 V88" stroke="#9aa0a6" stroke-width="3"/>
+      <rect x="30" y="22" width="60" height="50" rx="6" fill="#1b1b1b"/><ellipse cx="60" cy="22" rx="30" ry="9" fill="#333"/><circle cx="60" cy="22" r="4" fill="#666"/>
+      <text x="40" y="58" font-size="16" font-weight="700" fill="#ff8a8a">+</text>`,
     resistor: () => `<path d="M4 50 H116" stroke="#9aa0a6" stroke-width="3"/><g transform="translate(60 50)">${resistorSVG(['marrom', 'preto', 'vermelho'], { L: 72, h: 26 })}</g>`,
     led: () => `<g transform="translate(60 42) scale(.85)">${ledLateral('vermelho')}</g>`,
     capacitor: () => `
@@ -317,6 +341,69 @@ const Arte = (() => {
     },
   };
 
+  Object.assign(ILUSTRACOES, {
+    arduino() {
+      let s = `<g transform="translate(170 72)">${placaArduino()}</g>`;
+      const rot = (x1, y1, x2, y2, linhas, ancora = 'middle', cor = TINTA) => {
+        let t = `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="${TINTA}" stroke-width="1.5"/>`;
+        linhas.forEach((l, i) => { t += texto(x2 + (ancora === 'start' ? 4 : ancora === 'end' ? -4 : 0), y2 + (y2 < y1 ? -6 - (linhas.length - 1 - i) * 17 : 14 + i * 17), l, { tam: 14, peso: i ? 500 : 700, ancora, cor: i ? TINTA : cor }); });
+        return t;
+      };
+      s += rot(160, 118, 92, 150, ['USB', 'energia e programa'], 'middle', '#2364d2');
+      s += rot(197, 78, 120, 52, ['Botão reset'], 'middle', '#d62828');
+      s += rot(370, 78, 370, 46, ['Pinos digitais (0 a 13)', 'os com ~ também fazem PWM'], 'middle', '#8e44ad');
+      s += rot(440, 209, 480, 209, ['Microcontrolador', 'o “cérebro” da placa'], 'start', '#1f8f52');
+      s += rot(275, 276, 230, 300, ['Alimentação', '5V, 3.3V e GND'], 'middle', '#d62828');
+      s += rot(390, 276, 440, 300, ['Pinos analógicos', 'A0 a A5'], 'middle', '#b26b00');
+      s += rot(160, 232, 92, 262, ['Fonte externa', '7 a 12 V'], 'middle', TINTA);
+      return [650, 345, s];
+    },
+
+    'setup-loop'() {
+      let s = `<rect x="40" y="20" width="330" height="96" fill="#0f1f24" stroke="#00979d" stroke-width="4"/>
+        <rect x="40" y="150" width="330" height="150" fill="#0f1f24" stroke="#00979d" stroke-width="4"/>`;
+      const cod = (x, y, t, cor = '#e6f2f3') => `<text x="${x}" y="${y}" font-size="16" font-family="ui-monospace,Consolas,monospace" fill="${cor}">${t}</text>`;
+      s += cod(56, 48, '<tspan fill="#4fc3f7">void</tspan> <tspan fill="#ffb86c">setup</tspan>() {') + cod(76, 74, '<tspan fill="#ffb86c">pinMode</tspan>(13, OUTPUT);') + cod(56, 100, '}');
+      s += cod(56, 178, '<tspan fill="#4fc3f7">void</tspan> <tspan fill="#ffb86c">loop</tspan>() {') + cod(76, 204, '<tspan fill="#ffb86c">digitalWrite</tspan>(13, HIGH);') + cod(76, 228, '<tspan fill="#ffb86c">delay</tspan>(1000);')
+        + cod(76, 252, '<tspan fill="#ffb86c">digitalWrite</tspan>(13, LOW);') + cod(76, 276, '<tspan fill="#ffb86c">delay</tspan>(1000);') + cod(56, 296, '}');
+      s += `<path d="M205 118 V146" stroke="${TINTA}" stroke-width="3"/>` + seta(205, 144, 90, TINTA);
+      s += `<path d="M380 280 C 450 280 450 170 380 170" stroke="#e5484d" stroke-width="4" fill="none"/>` + seta(384, 170, 180, '#e5484d');
+      s += texto(400, 60, 'roda 1 vez,', { tam: 17, peso: 700, ancora: 'start', cor: '#1f8f52' }) + texto(400, 80, 'quando liga', { tam: 15, ancora: 'start' });
+      s += texto(462, 216, 'repete', { tam: 17, peso: 700, ancora: 'start', cor: '#e5484d' }) + texto(462, 236, 'para sempre', { tam: 15, ancora: 'start' });
+      return [600, 320, s];
+    },
+
+    'high-low'() {
+      const painel = (ox, alto) => {
+        let s = `<rect x="${ox}" y="10" width="280" height="240" fill="${alto ? '#fff8e0' : '#f1eef5'}" stroke="${TINTA}" stroke-width="3"/>`;
+        s += texto(ox + 140, 40, alto ? 'digitalWrite(13, HIGH);' : 'digitalWrite(13, LOW);', { tam: 15, fam: 'ui-monospace,Consolas,monospace', peso: 700 });
+        s += `<rect x="${ox + 20}" y="70" width="60" height="120" fill="#1d5fa0"/>` + texto(ox + 50, 134, '13', { tam: 18, peso: 700, cor: '#fff' });
+        s += `<path d="M${ox + 80} 110 H${ox + 120}" stroke="${alto ? '#e63946' : '#888'}" stroke-width="4"/>`;
+        s += zigH(ox + 120, ox + 190, 110) + `<path d="M${ox + 190} 110 H${ox + 214} V102 M${ox + 214} 150 V170 H${ox + 80}" fill="none" stroke="${TINTA}" stroke-width="3"/>`;
+        s += ledSimb(ox + 214, 126, 90, 'vermelho', alto);
+        s += texto(ox + 50, 210, alto ? '5 V' : '0 V', { tam: 24, peso: 800, cor: alto ? '#d62828' : '#666' });
+        s += texto(ox + 180, 210, alto ? 'LED aceso' : 'LED apagado', { tam: 17, peso: 700 });
+        s += texto(ox + 50, 166, 'GND', { tam: 12, cor: '#fff' });
+        return s;
+      };
+      return [600, 260, painel(10, true) + painel(310, false)];
+    },
+
+    buzzer() {
+      let s = `<g transform="translate(150 150) scale(2.2)"><path d="M-10 18 V48 M10 18 V40" stroke="#9aa0a6" stroke-width="3"/>
+        <rect x="-26" y="-26" width="52" height="46" rx="6" fill="#1b1b1b"/><ellipse cx="0" cy="-26" rx="26" ry="8" fill="#333"/><circle cx="0" cy="-26" r="4" fill="#666"/>
+        <text x="-20" y="8" font-size="14" font-weight="700" fill="#ff8a8a">+</text></g>`;
+      s += [40, 58, 76].map(r => `<path d="M${150 + r * 0.6} ${70 - r * 0.5} A${r} ${r} 0 0 1 ${150 + r * 0.95} ${70 + r * 0.25}" stroke="#ff6ec7" stroke-width="4" fill="none"/>`).join('');
+      s += `<path d="M128 258 L80 282" stroke="${TINTA}" stroke-width="1.5"/>` + texto(80, 298, 'perna + (longa)', { tam: 14, peso: 700, cor: '#d62828' });
+      s += `<path d="M172 242 L230 282" stroke="${TINTA}" stroke-width="1.5"/>` + texto(240, 298, 'perna −', { tam: 14, peso: 700, cor: '#2364d2' });
+      s += `<rect x="330" y="40" width="250" height="220" fill="#f3e6fb"/>`;
+      s += texto(455, 80, 'O buzzer transforma', { tam: 16, peso: 700 }) + texto(455, 100, 'eletricidade em som.', { tam: 16, peso: 700 });
+      s += texto(455, 140, 'Pino em HIGH: apita', { tam: 15 }) + texto(455, 162, 'Pino em LOW: silêncio', { tam: 15 });
+      s += texto(455, 200, 'tone(8, 440) toca a', { tam: 15, fam: 'ui-monospace,Consolas,monospace' }) + texto(455, 222, 'nota lá (440 Hz)', { tam: 15 });
+      return [600, 310, s];
+    },
+  });
+
   // Resistor grande com as faixas indicadas. Ex.: 'resistor:vermelho,vermelho,marrom'.
   // 'resistor-explicado:...' mostra também a conta.
   function ilustracaoResistor(cores, explicado) {
@@ -467,8 +554,39 @@ const Arte = (() => {
     </g>`;
   }
 
+  // Sala com computadores, onde acontece a oficina de Arduino
+  function fundoComputadores() {
+    let s = `<defs><linearGradient id="pc-parede" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9eef4"/><stop offset="1" stop-color="#d5dde8"/></linearGradient></defs>
+      <rect width="1600" height="900" fill="url(#pc-parede)"/>
+      <rect x="160" y="0" width="320" height="12" fill="#fff"/><rect x="1080" y="0" width="320" height="12" fill="#fff"/>
+      <g transform="translate(80 70)"><rect width="520" height="270" rx="8" fill="#a29eaa"/><rect x="10" y="10" width="500" height="250" rx="4" fill="#fdfdfd"/>
+        <text x="36" y="70" font-family="ui-monospace,monospace" font-size="34" fill="#2364d2">void loop() {</text>
+        <text x="76" y="120" font-family="ui-monospace,monospace" font-size="30" fill="#d62f6b">digitalWrite(13, HIGH);</text>
+        <text x="76" y="164" font-family="ui-monospace,monospace" font-size="30" fill="#3a3a3a">delay(1000);</text>
+        <text x="36" y="212" font-family="ui-monospace,monospace" font-size="34" fill="#2364d2">}</text></g>
+      <g transform="translate(700 60)"><rect width="420" height="280" fill="#ff8a1f"/><rect x="20" y="20" width="380" height="240" fill="#fff3e6"/>
+        <text x="210" y="110" font-family="${FONTE}" font-size="46" font-weight="700" fill="#643a96" text-anchor="middle">OFICINA</text>
+        <text x="210" y="170" font-family="${FONTE}" font-size="46" font-weight="700" fill="#00979d" text-anchor="middle">ARDUINO</text>
+        <g transform="translate(150 190) scale(.4)">${placaArduino()}</g></g>
+      <g transform="translate(1230 70)"><rect width="300" height="250" rx="6" fill="#fff"/><rect x="12" y="12" width="132" height="226" fill="#cfe7f6"/><rect x="156" y="12" width="132" height="226" fill="#cfe7f6"/>
+        <path d="M12 190 Q50 150 90 178 T144 168 V238 H12 Z M156 200 Q200 160 240 190 T288 176 V238 H156 Z" fill="#a9d6a0"/></g>
+      <rect x="0" y="606" width="1600" height="294" fill="#b9b2c6"/>
+      <rect x="0" y="560" width="1600" height="40" fill="#e3ded5"/><rect x="0" y="600" width="1600" height="300" fill="#8f8aa0"/>
+      <rect x="0" y="600" width="1600" height="10" fill="#6f6a80"/>`;
+    for (let i = 0; i < 5; i++) {
+      const x = 40 + i * 320;
+      s += `<rect x="${x + 40}" y="380" width="230" height="150" rx="6" fill="#2b2b33"/><rect x="${x + 52}" y="392" width="206" height="118" fill="#00979d"/>
+        <rect x="${x + 52}" y="392" width="206" height="18" fill="#006468"/>
+        <rect x="${x + 64}" y="420" width="120" height="6" fill="#bff4f6"/><rect x="${x + 64}" y="436" width="160" height="6" fill="#ffb86c"/><rect x="${x + 64}" y="452" width="90" height="6" fill="#bff4f6"/><rect x="${x + 64}" y="468" width="140" height="6" fill="#ffb86c"/>
+        <rect x="${x + 140}" y="530" width="30" height="30" fill="#2b2b33"/><rect x="${x + 100}" y="556" width="110" height="8" fill="#2b2b33"/>
+        <rect x="${x + 30}" y="566" width="170" height="20" fill="#3a3a44"/>
+        <g transform="translate(${x + 214} 560) scale(.2)">${placaArduino({ destaque13: i % 2 === 0 })}</g>`;
+    }
+    return s;
+  }
+
   function fundo(id) {
-    const conteudo = id === 'corredor' ? fundoCorredor() : fundoLaboratorio();
+    const conteudo = id === 'corredor' ? fundoCorredor() : id === 'computadores' ? fundoComputadores() : fundoLaboratorio();
     return `<svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${conteudo}</svg>`;
   }
 

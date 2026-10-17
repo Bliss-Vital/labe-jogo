@@ -48,6 +48,27 @@ function sondasNosLados(c, p) {
   return sondasEm(c, p) || (c.no(c.sondas.v) === c.no(p.b) && c.no(c.sondas.p) === c.no(p.a));
 }
 
+// Comentários sobre o código do Arduino que deveria controlar o pino indicado
+function dicaArduino(c, pino) {
+  const a = c.arduino;
+  if (!a) return null;
+  const { setup, loop } = a.programa;
+  const todos = [...setup, ...loop];
+  if (!todos.length) return { tipo: 'info', texto: 'O código ainda está vazio. Use os botões de comando para montar o **setup()** e o **loop()**, depois clique em **Enviar código para o Arduino**.' };
+  if (!a.rodando) return null;
+  if (!todos.some(i => i.pino === pino)) return { tipo: 'aviso', texto: `O seu código não mexe no **pino ${pino}**. Confira os números dentro dos comandos!` };
+  const usaTom = todos.some(i => i.cmd === 'tone');
+  if (loop.length && !loop.some(i => i.cmd === 'delay')) return { tipo: 'aviso', texto: 'O loop() não tem nenhum **delay**: ele liga e desliga tão rápido que não dá para perceber. Coloque um delay depois de cada comando que liga ou desliga.' };
+  const temPinMode = todos.some(i => i.cmd === 'pinMode' && i.pino === pino && i.modo === 'OUTPUT');
+  if (!temPinMode && !usaTom && loop.some(i => i.cmd === 'digitalWrite' && i.pino === pino)) {
+    return { tipo: 'aviso', texto: `Faltou o **pinMode(${pino}, OUTPUT);** no setup(). Sem ele o pino não consegue fornecer corrente e o componente quase não funciona.` };
+  }
+  const valores = new Set(loop.filter(i => i.cmd === 'digitalWrite' && i.pino === pino).map(i => i.valor));
+  if (!usaTom && valores.size === 1) return { tipo: 'aviso', texto: `No loop() o pino ${pino} só recebe **${[...valores][0]}**. Para piscar, ele precisa de HIGH **e** de LOW, cada um com um delay depois.` };
+  if (!loop.length) return { tipo: 'info', texto: 'O loop() está vazio: o Arduino roda o setup() e fica parado. Coloque no loop() o que deve se repetir.' };
+  return null;
+}
+
 const DESAFIOS = {
   'primeira-peca': {
     titulo: 'Seu primeiro componente',
@@ -168,6 +189,43 @@ const DESAFIOS = {
     },
     sucesso: 'Mandou bem! Agora você tem a tensão sobre o resistor. Com a Lei de Ohm dá para descobrir a corrente!',
   },
+
+  // ---------------------------------------------------------------- oficina de Arduino
+  'pisca-led': {
+    titulo: 'Prática 1: pisca LED',
+    objetivo: 'Ligue um LED (com resistor) no **pino 13** e programe o Arduino para fazer ele **piscar**.',
+    monitora: 'bia',
+    intro: 'Primeiro o circuito: pino 13 → resistor → LED → GND. Depois o código: no setup(), o pino 13 vira OUTPUT; no loop(), liga, espera, desliga e espera.',
+    gaveta: { arduino: true, resistores: [220, 1000], leds: ['vermelho', 'verde', 'amarelo'], fios: true, comandos: ['pinMode', 'digitalWrite', 'delay'] },
+    dicas: [
+      'Circuito: um fio do **pino 13** até a coluna 5 da protoboard. Resistor de 220 Ω da coluna 5 até a 9. LED com a perna longa na coluna 9 e a curta na 12. E um fio da coluna 12 até a trilha **−** (que já está ligada no GND).',
+      'No setup(), adicione **pinMode(13, OUTPUT);**',
+      'No loop(), em ordem: **digitalWrite(13, HIGH); delay(1000); digitalWrite(13, LOW); delay(1000);**',
+      'Repare no LED **L** da placa: ele também está ligado no pino 13 e pisca junto!',
+    ],
+    verificar: c => !!c.arduino && Object.values(c.arduino.piscadas).some(n => n >= 2),
+    dicaAoVivo: c => dicaArduino(c, 13),
+    sucesso: 'Está piscando! Você acabou de programar um microcontrolador. Esse programa se chama **Blink** e é o primeiro que todo mundo faz com Arduino.',
+  },
+
+  buzzer: {
+    titulo: 'Prática 2: ativando o buzzer',
+    objetivo: 'Ligue o **buzzer** no **pino 8** e faça ele **apitar** pelo menos duas vezes.',
+    monitora: 'nina',
+    intro: 'O buzzer tem polaridade, igual ao LED: a perna + vai para o pino 8 e a − para o GND. No código, dá para usar digitalWrite com delay, ou tone e noTone.',
+    gaveta: { arduino: true, buzzer: true, fios: true, resistores: [220], leds: ['vermelho'], comandos: ['pinMode', 'digitalWrite', 'delay', 'tone', 'noTone'] },
+    dicas: [
+      'Circuito: um fio do **pino 8** até a coluna 5. Buzzer com a perna + na coluna 5 e a − na coluna 8. E um fio da coluna 8 até a trilha **−**.',
+      'Código: no setup(), **pinMode(8, OUTPUT);** e no loop(), **digitalWrite(8, HIGH); delay(500); digitalWrite(8, LOW); delay(500);**',
+      'Quer tocar uma nota? No loop(): **tone(8, 440);** (a nota lá) **delay(500); noTone(8); delay(500);**',
+    ],
+    verificar: c => !!c.arduino && Object.values(c.arduino.bipes).some(n => n >= 2),
+    dicaAoVivo: c => {
+      if (c.res && c.res.buzzers.some(z => z.invertido)) return { tipo: 'aviso', texto: 'O buzzer parece estar **ao contrário**: a perna + precisa ir para o lado do pino 8. Selecione e clique em “Inverter”.' };
+      return dicaArduino(c, 8);
+    },
+    sucesso: 'Bip, bip! O buzzer está apitando no ritmo do seu código. Com tone() dá até para tocar músicas!',
+  },
 };
 
 // Comentários automáticos da monitora enquanto a participante monta (vale para todos os desafios).
@@ -177,15 +235,17 @@ function dicaAutomatica(c, desafio) {
       return { tipo: 'aviso', texto: `${c.nomePeca(p)} está com as duas pernas no mesmo grupo de furos. Assim ele fica “em curto” e a corrente nem passa por ele. Coloque cada perna em uma coluna diferente.` };
     }
   }
-  if (!c.ligada) return null;
+  if (!c.ligada) return desafio && desafio.dicaAoVivo && c.arduino ? desafio.dicaAoVivo(c) : null;
   const r = c.res;
-  if (r.curto) return { tipo: 'erro', texto: '**Curto-circuito!** Tem um fio ligando o + direto no −, sem nada no meio. A fonte entrou em proteção. Remova esse fio!' };
+  if (r.curto) return { tipo: 'erro', texto: `**Curto-circuito!** Tem um fio ligando o + direto no −, sem nada no meio. ${c.arduino ? 'O Arduino desligou para se proteger.' : 'A fonte entrou em proteção.'} Remova esse fio!` };
+  if (r.curtoPino) return { tipo: 'erro', texto: `**Curto no pino ${r.curtoPino.slice(1)}!** Ele está ligado direto no GND (ou no 5V), sem nada no meio. Remova esse fio antes que o pino estrague.` };
   if (r.queimouAgora.length) return { tipo: 'erro', texto: '**Puf!** O LED queimou: passou corrente demais. O LED sempre precisa de um **resistor em série** para limitar a corrente. Remova o LED queimado e tente de novo.' };
   if (c.pecas.some(p => p.queimado)) return { tipo: 'aviso', texto: 'Tem um LED queimado na placa (o cinza). Selecione ele e clique em “Remover”, depois coloque um novo — com resistor!' };
   const especifica = desafio && desafio.dicaAoVivo && desafio.dicaAoVivo(c);
   if (especifica) return especifica;
   if (r.leds.some(l => l.invertido)) return { tipo: 'aviso', texto: 'Um LED parece estar **ao contrário**. A perna longa (+) precisa ficar do lado do positivo. Selecione o LED e clique em “Inverter”.' };
   if (r.leds.some(l => !l.aceso && l.corrente > 1e-5)) return { tipo: 'aviso', texto: 'O LED está tão fraquinho que quase não dá para ver: o resistor é grande demais e passa pouca corrente. Tente um de **220 Ω**.' };
-  if (r.leds.length && r.leds.every(l => !l.aceso) && r.correnteFonte < 1e-4) return { tipo: 'info', texto: 'A fonte está ligada, mas não sai corrente: o circuito ainda está **aberto**. Confira se existe um caminho completo do + até o −.' };
+  // com o Arduino o LED apaga de propósito quando o pino está em LOW, então não dá para dizer que está "aberto"
+  if (!c.arduino && r.leds.length && r.leds.every(l => !l.aceso) && r.correnteFonte < 1e-4) return { tipo: 'info', texto: 'A fonte está ligada, mas não sai corrente: o circuito ainda está **aberto**. Confira se existe um caminho completo do + até o −.' };
   return null;
 }
