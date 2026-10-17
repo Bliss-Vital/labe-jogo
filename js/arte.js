@@ -13,7 +13,7 @@ const Arte = (() => {
   const ORDEM = ['preto', 'marrom', 'vermelho', 'laranja', 'amarelo', 'verde', 'azul', 'violeta', 'cinza', 'branco'];
   const COR_LED = { vermelho: '#ff3b3b', verde: '#2ee66b', amarelo: '#ffd23f', azul: '#3d8bff', branco: '#f4f8ff' };
   const TINTA = '#3b1f5c';
-  const FONTE = "'Pixelify Sans',system-ui,sans-serif";
+  const FONTE = "'Silkscreen','Pixelify Sans',system-ui,sans-serif"; // Silkscreen só fornece os números
 
   const num = n => n.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
   function ohms(v) {
@@ -236,16 +236,8 @@ const Arte = (() => {
     },
 
     'codigo-cores'() {
-      let s = '';
-      ORDEM.forEach((cor, i) => {
-        const x = i < 5 ? 30 : 320, y = 14 + (i % 5) * 56;
-        s += `<rect x="${x}" y="${y}" width="74" height="42" rx="8" fill="${CORES[cor]}" stroke="${cor === 'branco' ? '#bbb' : 'none'}" stroke-width="2"/>`;
-        s += texto(x + 37, y + 30, i, { tam: 24, peso: 800, cor: ['preto', 'marrom', 'azul', 'violeta', 'vermelho', 'verde', 'cinza'].includes(cor) ? '#fff' : '#222', fam: FONTE });
-        s += texto(x + 92, y + 28, cor, { tam: 20, peso: 700, ancora: 'start' });
-      });
-      s += `<rect x="30" y="298" width="18" height="18" rx="4" fill="${CORES.dourado}"/>` + texto(56, 312, 'dourado = tolerância de ±5%', { tam: 14, ancora: 'start' });
-      s += `<rect x="320" y="298" width="18" height="18" rx="4" fill="${CORES.prata}"/>` + texto(346, 312, 'prata = ±10%', { tam: 14, ancora: 'start' });
-      return [600, 330, s];
+      const [s, h] = tabelaCores(4);
+      return [640, h + 6, s];
     },
 
     protoboard() {
@@ -404,27 +396,79 @@ const Arte = (() => {
     },
   });
 
-  // Resistor grande com as faixas indicadas. Ex.: 'resistor:vermelho,vermelho,marrom'.
-  // 'resistor-explicado:...' mostra também a conta.
-  function ilustracaoResistor(cores, explicado) {
-    const f = cores.split(',');
-    const L = 320, cx = 300, cy = 92;
-    let s = `<path d="M40 ${cy} H560" stroke="#9aa0a6" stroke-width="6"/><g transform="translate(${cx} ${cy})">${resistorSVG(f, { L, h: 92 })}</g>`;
-    const xs = [-0.2, -0.08, 0.04, 0.2].map(p => cx + p * L);
-    const rot = ['1º dígito', '2º dígito', 'multiplicador'];
-    const destino = [140, 300, 460];
-    const valores = [ORDEM.indexOf(f[0]), ORDEM.indexOf(f[1]), `× ${num(10 ** ORDEM.indexOf(f[2]))}`];
-    xs.slice(0, 3).forEach((x, i) => {
-      s += `<path d="M${x} ${cy + 40} L${destino[i]} 168" stroke="${TINTA}" stroke-width="1.5"/>`;
-      s += texto(destino[i], 186, rot[i], { tam: 15, peso: 700 });
-      if (explicado) s += texto(destino[i], 210, `${f[i]} = ${valores[i]}`, { tam: 15, cor: '#8e44ad', peso: 800 });
+  // Tabela do código de cores da oficina (mesmos valores da tabela das aulas, de 5 faixas).
+  // As colunas têm o nome da função de cada faixa, para servir também aos resistores de 4 faixas.
+  const TABELA = [
+    // cor, nome, 1º dígito, 2º dígito, 3º dígito, multiplicador (zeros), tolerância, código
+    ['preto', 'Preto', '–', '0', '0', '–', '–', '–'],
+    ['marrom', 'Marrom', '1', '1', '1', '0', '±1%', 'F'],
+    ['vermelho', 'Vermelho', '2', '2', '2', '00', '±2%', 'G'],
+    ['laranja', 'Laranja', '3', '3', '3', '000', '–', '–'],
+    ['amarelo', 'Amarelo', '4', '4', '4', '0000', '–', '–'],
+    ['verde', 'Verde', '5', '5', '5', '00000', '±0,5%', 'D'],
+    ['azul', 'Azul', '6', '6', '6', '000000', '±0,25%', 'C'],
+    ['violeta', 'Violeta', '7', '7', '7', '0000000', '±0,1%', 'B'],
+    ['cinza', 'Cinza', '8', '8', '8', '00000000', '±0,05%', 'A'],
+    ['branco', 'Branco', '9', '9', '9', '000000000', '–', '–'],
+    ['dourado', 'Ouro', '–', '–', '–', '÷10', '±5%', 'J'],
+    ['prata', 'Prata', '–', '–', '–', '÷100', '±10%', 'K'],
+    ['incolor', 'Incolor', '–', '–', '–', '–', '±20%', 'M'],
+  ];
+  const TEXTO_CLARO = ['preto', 'marrom', 'vermelho', 'verde', 'azul', 'violeta'];
+
+  // Desenha a tabela a partir da altura y0 (largura 640). Devolve [svg, altura].
+  function tabelaCores(y0) {
+    const larguras = [112, 66, 66, 66, 124, 110, 76];
+    const titulos = ['Cor', '1º dígito', '2º dígito', '3º dígito*', 'Multiplicador', 'Tolerância', 'Código'];
+    const xs = larguras.reduce((a, w) => [...a, a[a.length - 1] + w], [10]);
+    const alt = 23, cab = 28;
+    let s = `<rect x="10" y="${y0}" width="620" height="${cab}" fill="#dcd4e6"/>`;
+    titulos.forEach((t, i) => { s += texto(xs[i] + larguras[i] / 2, y0 + 19, t, { tam: 12, peso: 700 }); });
+    TABELA.forEach((linha, r) => {
+      const y = y0 + cab + r * alt;
+      const fundo = linha[0] === 'incolor' ? '#ffffff' : CORES[linha[0]];
+      const cor = TEXTO_CLARO.includes(linha[0]) ? '#ffffff' : '#1b1b1b';
+      s += `<rect x="10" y="${y}" width="620" height="${alt}" fill="${fundo}"/>`;
+      s += texto(18, y + 16.5, linha[1], { tam: 14, peso: 700, cor, ancora: 'start' });
+      linha.slice(2).forEach((v, i) => { s += texto(xs[i + 1] + larguras[i + 1] / 2, y + 16.5, v, { tam: 14, peso: 700, cor }); });
     });
-    s += `<path d="M${xs[3]} ${cy - 40} L470 24" stroke="${TINTA}" stroke-width="1.5"/>` + texto(476, 22, 'tolerância', { tam: 14, ancora: 'start' });
+    const fim = y0 + cab + TABELA.length * alt;
+    // linhas da grade
+    for (let r = 0; r <= TABELA.length + 1; r++) {
+      const y = r === 0 ? y0 : y0 + cab + (r - 1) * alt;
+      s += `<path d="M10 ${y} H630" stroke="${TINTA}" stroke-width="1.5"/>`;
+    }
+    xs.forEach(x => { s += `<path d="M${x} ${y0} V${fim}" stroke="${TINTA}" stroke-width="1.5"/>`; });
+    s += texto(10, fim + 18, '* O 3º dígito só aparece nos resistores de 5 faixas.', { tam: 12, ancora: 'start' });
+    s += texto(10, fim + 34, '  Nos de 4 faixas (como os do jogo), a 3ª faixa já é o multiplicador.', { tam: 12, ancora: 'start' });
+    return [s, fim + 40 - y0];
+  }
+
+  // Resistor grande com as faixas indicadas e a tabela embaixo. Ex.: 'resistor:vermelho,vermelho,marrom'.
+  // 'resistor-explicado:...' mostra também a conta.
+  function ilustracaoResistor(cores, explicado, comTabela = true) {
+    const f = cores.split(',');
+    const L = 280, cx = 320, cy = 56;
+    let s = `<path d="M70 ${cy} H570" stroke="#9aa0a6" stroke-width="5"/><g transform="translate(${cx} ${cy})">${resistorSVG(f, { L, h: 72 })}</g>`;
+    const xs = [-0.2, -0.08, 0.04, 0.2].map(p => cx + p * L);
+    const rot = ['1º dígito', '2º dígito', 'multiplicador', 'tolerância'];
+    const destino = [140, 260, 390, 520];
+    const m = ORDEM.indexOf(f[2]);
+    const valores = [ORDEM.indexOf(f[0]), ORDEM.indexOf(f[1]), m ? '0'.repeat(m) : 'nenhum zero', '±5%'];
+    xs.forEach((x, i) => {
+      s += `<path d="M${x} ${cy + 30} L${destino[i]} 106" stroke="${TINTA}" stroke-width="1.5"/>`;
+      s += texto(destino[i], 122, rot[i], { tam: 14, peso: 700 });
+      if (explicado) s += texto(destino[i], 142, `${i < 3 ? f[i] : 'ouro'} = ${valores[i]}`, { tam: 13, cor: '#8e44ad', peso: 700 });
+    });
+    let topo = 136;
     if (explicado) {
       const v = valorDasFaixas(f);
-      s += texto(300, 246, `${valores[0]}${valores[1]} ${valores[2]} = ${num(v)} Ω${v >= 1000 ? ` = ${ohms(v)}` : ''}`, { tam: 22, peso: 800, fam: FONTE });
+      s += texto(320, 172, `${valores[0]}${valores[1]} ${m ? 'seguido de ' + '0'.repeat(m) : 'sem zeros'} = ${num(v)} Ω${v >= 1000 ? ` = ${ohms(v)}` : ''}`, { tam: 20, peso: 700 });
+      topo = 188;
     }
-    return [600, explicado ? 262 : 222, s];
+    if (!comTabela) return [640, topo, s];
+    const [tab, h] = tabelaCores(topo);
+    return [640, topo + h, s + tab];
   }
 
   function ilustracao(id) {

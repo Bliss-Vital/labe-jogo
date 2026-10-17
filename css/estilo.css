@@ -21,7 +21,7 @@
   --aviso-claro: #fff0d2;
   --px: 4px;               /* espessura de borda: um "pixel" grande */
   --sombra: 6px 6px 0 rgba(8, 2, 16, .55);
-  --f-pixel: 'Pixelify Sans', 'Courier New', ui-monospace, monospace;
+  --f-pixel: 'Silkscreen', 'Pixelify Sans', 'Courier New', ui-monospace, monospace; /* Silkscreen só tem os números */
   --f-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
 }
 
@@ -159,6 +159,8 @@ h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .0
   background: #fff; color: var(--tinta); padding: 12px; border: var(--px) solid var(--tinta); box-shadow: var(--sombra);
 }
 .cena-ilustracao svg { width: 100%; height: auto; display: block; max-height: calc(100cqh - 56px); }
+.cena-ilustracao.alta { width: min(680px, calc(100% - 32px)); }
+.tabela-cores { width: 100%; }
 .fluxo { animation: fluir 1s steps(6) infinite; }
 @keyframes fluir { to { stroke-dashoffset: -22; } }
 
@@ -184,7 +186,7 @@ h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .0
 .narracao .dialogo-seta { color: var(--lilas); }
 @keyframes piscar-seta { 50% { opacity: .2; } }
 
-.dialogo-opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 12px; }
+.dialogo-opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 12px; }
 .dialogo-opcoes:empty { display: none; }
 .opcao {
   text-align: left; border: 3px solid var(--tinta); background: #fff; color: var(--tinta);
@@ -204,7 +206,8 @@ h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .0
 
 /* minijogo: monte o resistor */
 .monta-resistor { display: flex; flex-direction: column; gap: 12px; align-items: center; }
-.monta-resistor svg { max-height: 26cqh; }
+.monta-resistor > svg { max-height: 26cqh; }
+.monta-resistor .tabela-cores svg { max-height: none; }
 .faixas-controles { display: grid; gap: 8px; width: 100%; }
 .faixa-ctrl { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 9em) auto; align-items: center; gap: 8px; font-weight: 600; }
 .faixa-ctrl .rotulo { font-size: .9rem; color: var(--tinta-suave); }
@@ -334,7 +337,9 @@ h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .0
   .bancada-corpo, .bancada-corpo.com-codigo { grid-template-columns: minmax(0, 1fr); grid-template-areas: "placa" "codigo" "lateral"; }
 }
 @media (max-width: 760px) {
-  .cena-ilustracao { left: 12px; right: 12px; width: auto; padding: 8px; }
+  .cena-ilustracao, .cena-ilustracao.alta { left: 12px; right: 12px; width: auto; padding: 8px; }
+  /* no celular a tabela fica num tamanho legível e o painel rola */
+  .cena-ilustracao.alta svg { min-width: 560px; max-height: none; }
   .caixa-dialogo { gap: 10px; padding: 12px 12px 26px; width: calc(100% - 24px); margin: 10px auto 12px; }
   .dialogo-texto { font-size: 1.05rem; }
   .barra .titulo { font-size: .95rem; }

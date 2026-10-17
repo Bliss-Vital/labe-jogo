@@ -235,6 +235,7 @@ const Som = (() => {
     cena.ilustracao = id || null;
     if (!id) { painel.hidden = true; painel.innerHTML = ''; }
     else { painel.innerHTML = Arte.ilustracao(id); painel.hidden = false; }
+    painel.classList.toggle('alta', !!id && /^(resistor|codigo-cores)/.test(id));
     atualizarElenco(null);
   }
 
@@ -407,8 +408,10 @@ const Som = (() => {
             <button type="button" data-f="${i}" data-d="1" aria-label="Próxima cor da ${rotulos[i]}" ${terminou ? 'disabled' : ''}>▶</button>
           </div>`).join('')}</div>
         <button type="button" class="btn" id="btn-conferir" ${terminou ? 'disabled' : ''}>Conferir</button>
+        <div class="tabela-cores">${Arte.ilustracao('codigo-cores')}</div>
       </div>`;
       painel.hidden = false;
+      painel.classList.add('alta');
     }
     painel.onclick = ev => {
       const b = ev.target.closest('button');
