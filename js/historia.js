@@ -7,6 +7,8 @@
  *       quem: id de PERSONAGENS, 'voce' (a jogadora) ou 'narrador'
  *       quem fala aparece na cena; na narração ela continua lá
  *   sozinha: true                                    tira a monitora da cena (ex.: no corredor)
+ *   grupo: ['aline-robotica', 'julia-robotica']      várias da equipe juntas na frente da sala;
+ *                                                    saem com grupo: null ou quando outra pessoa fala
  *       no texto: {nome} vira o nome da jogadora, **negrito** destaca palavras
  *   ilustracao: 'agua'                               mostra uma ilustração (veja arte.js);
  *                                                    ela fica na tela até outra ou ilustracao: null
@@ -29,8 +31,7 @@ const PERSONAGENS = {
   suzanne: { nome: 'Suzanne', cor: '#7b3fb0', folha: 'monitoras', sprite: 1 },
   aline: { nome: 'Aline', cor: '#b0458a', folha: 'personagens', sprite: 8 },
   julia: { nome: 'Julia', cor: '#a8326e', folha: 'personagens', sprite: 11 },
-  // a Letícia só tem desenho com o uniforme da robótica (quadro 14 do Piskel)
-  leticia: { nome: 'Letícia', cor: '#c2417f', folha: 'personagens', sprite: 13 },
+  leticia: { nome: 'Letícia', cor: '#c2417f', folha: 'personagens', sprite: 7 },
   marta: { nome: 'Técnica Marta', cor: '#2f6f62', folha: 'personagens', sprite: 10 },
   livia: { nome: 'Técnica Lívia', cor: '#8a4b16', folha: 'personagens', sprite: 2 },
   // com o uniforme da equipe de robótica (oficina de Arduino)
@@ -270,7 +271,10 @@ const OFICINAS = [
     titulo: 'Motores elétricos',
     resumo: 'Descubra como o motor transforma eletricidade em movimento, inverta o sentido do giro e controle a velocidade.',
     passos: [
-      { cenario: 'laboratorio', quem: 'alejandra', texto: 'Oi, {nome}! Até agora a eletricidade acendeu luzes. Hoje ela vai fazer as coisas **se mexerem**!' },
+      { cenario: 'laboratorio', quem: 'alejandra', texto: 'Oi, {nome}! Nessa aula vamos aprender sobre **motores elétricos**. Mas antes, as meninas vão falar um pouco sobre o grupo de robótica!' },
+      { quem: 'narrador', grupo: ['aline-robotica', 'leticia-robotica', 'julia-robotica'], texto: 'A Aline, a Letícia e a Julia vão para a frente da sala, com o uniforme verde da equipe de robótica.' },
+      { quem: 'julia-robotica', texto: 'Além do projeto LABe, fazemos parte da equipe de robótica **Project Neon**, e hoje vamos aprender mais sobre motores elétricos, alguns que usamos também em nossos robôs! Sigam a nossa equipe no Instagram: **@projectneon**' },
+      { quem: 'alejandra', grupo: null, texto: 'Obrigada, meninas! Até agora a eletricidade acendeu luzes. Hoje ela vai fazer as coisas **se mexerem**!' },
       { quem: 'marta', ilustracao: 'motor', texto: 'Separei um **motor de corrente contínua** para cada bancada. É o mesmo tipo que tem em carrinhos de brinquedo, ventiladores e robôs.' },
       { quem: 'marta', texto: 'O motor transforma **energia elétrica** em **movimento**: quando passa corrente por ele, o **eixo** gira, e a hélice gira junto.' },
       { quem: 'marta', ilustracao: 'motor-dentro', texto: 'Por dentro ele tem **ímãs** e uma **bobina**, que é um fio de cobre enrolado muitas vezes. Quando passa corrente, a bobina vira um **eletroímã**.' },
@@ -284,13 +288,13 @@ const OFICINAS = [
           { texto: 'Energia elétrica em luz', resposta: 'Quem faz isso é o LED! O motor transforma a energia em movimento.' },
         ],
       },
-      { quem: 'julia', texto: 'Bora ver isso funcionando! Ligue o motor na fonte da bancada.' },
+      { quem: 'julia-robotica', texto: 'Bora ver isso funcionando! Ligue o motor na fonte da bancada.' },
       { tipo: 'desafio', id: 'liga-motor' },
-      { quem: 'julia', texto: 'Ele girou no sentido **{sentidoMotor}**. E olha o visor da fonte: o motor puxa uns **{correnteMotor} mA**, enquanto um LED aceso usa uns 15 mA!' },
-      { quem: 'julia', texto: 'Diferente do LED, o motor funciona ligado dos dois jeitos. O que muda é o **sentido** do giro. Testa aí: faça ele girar para o outro lado.' },
+      { quem: 'julia-robotica', texto: 'Ele girou no sentido **{sentidoMotor}**. E olha o visor da fonte: o motor puxa uns **{correnteMotor} mA**, enquanto um LED aceso usa uns 15 mA!' },
+      { quem: 'julia-robotica', texto: 'Diferente do LED, o motor funciona ligado dos dois jeitos. O que muda é o **sentido** do giro. Testa aí: faça ele girar para o outro lado.' },
       { tipo: 'desafio', id: 'inverte-motor' },
       {
-        tipo: 'quiz', quem: 'julia', pergunta: 'Um robô tem uma roda de cada lado, cada uma com seu motor. Para ele andar **de ré**, o que a gente faz?',
+        tipo: 'quiz', quem: 'julia-robotica', pergunta: 'Um robô tem uma roda de cada lado, cada uma com seu motor. Para ele andar **de ré**, o que a gente faz?',
         opcoes: [
           { texto: 'Inverte a polaridade dos dois motores', certa: true, resposta: 'Isso! Com a corrente ao contrário, as duas rodas giram para trás. Na robótica, um **driver de motor** (ponte H) faz essa troca pelo código.' },
           { texto: 'Desliga um dos motores', resposta: 'Assim o robô fica girando em volta da roda parada! Para dar ré, as duas rodas precisam girar ao contrário.' },
@@ -299,9 +303,9 @@ const OFICINAS = [
       },
       { quem: 'marta', ilustracao: 'motor-velocidade', texto: 'E a velocidade? Quanto **maior a tensão** no motor, mais rápido ele gira. Com menos tensão, ele gira mais devagar.' },
       { quem: 'marta', texto: 'A fonte da bancada é fixa em 5 V. Mas, com um **resistor em série**, parte da tensão fica no resistor e sobra menos para o motor.' },
-      { quem: 'julia', ilustracao: null, texto: 'Desafio: faça o motor girar **mais devagar** usando um resistor.' },
+      { quem: 'julia-robotica', ilustracao: null, texto: 'Desafio: faça o motor girar **mais devagar** usando um resistor.' },
       { tipo: 'desafio', id: 'motor-devagar' },
-      { quem: 'julia', texto: 'Com o resistor de **{resistorMotor}**, sobraram **{tensaoMotor} V** para o motor. E com um resistor grande demais, ele nem consegue sair do lugar!' },
+      { quem: 'julia-robotica', texto: 'Com o resistor de **{resistorMotor}**, sobraram **{tensaoMotor} V** para o motor. E com um resistor grande demais, ele nem consegue sair do lugar!' },
       {
         tipo: 'quiz', quem: 'alejandra', pergunta: 'Um pino do Arduino fornece só uns **20 mA**. Dá para ligar o motor direto nele?',
         opcoes: [
@@ -323,7 +327,7 @@ const OFICINAS = [
     passos: [
       { cenario: 'computadores', quem: 'alejandra', texto: 'Bem-vinda à oficina de Arduino, {nome}! Aqui você aprende sobre **microcontroladores** e **programação básica**.' },
       { quem: 'alejandra', texto: 'Hoje a bancada fica do lado do computador: além de montar o circuito, você vai escrever o código que controla ele.' },
-      { quem: 'alejandra', texto: 'E hoje quem te acompanha são as monitoras da **equipe de robótica**: a Aline, a Letícia e a Julia. Repara no uniforme!' },
+      { quem: 'alejandra', texto: 'E hoje quem te acompanha de novo é a **equipe de robótica Project Neon**: a Aline, a Letícia e a Julia!' },
       { quem: 'aline-robotica', ilustracao: 'arduino', texto: 'Esse é o **Arduino UNO**! O Arduino é uma plataforma de prototipagem eletrônica **aberta** e de **baixo custo**.' },
       { quem: 'aline-robotica', texto: 'Ele é baseado em **hardware**, a placa com o microcontrolador, e em **software**, a IDE Arduino, o programa onde a gente escreve o código.' },
       { quem: 'aline-robotica', texto: 'Com ele dá para programar e controlar **sensores, motores, LEDs** e diversos dispositivos eletrônicos.' },

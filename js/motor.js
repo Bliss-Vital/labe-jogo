@@ -229,7 +229,19 @@ const Som = (() => {
   }
 
   // ---------------------------------------------------------------- cena
-  const cena = { indice: 0, oficina: null, i: 0, erros: 0, monitora: null, ilustracao: null, cenario: null, esperando: null, aoAvancar: null };
+  // monitora: quem da equipe está em cena; grupo: várias da equipe juntas na frente da sala
+  const cena = { indice: 0, oficina: null, i: 0, erros: 0, monitora: null, grupo: null, ilustracao: null, cenario: null, esperando: null, aoAvancar: null };
+
+  // aplica o que um passo muda em quem está em cena
+  function elencoDoPasso(p) {
+    if (p.sozinha) { cena.monitora = null; cena.grupo = null; }
+    if ('grupo' in p) cena.grupo = p.grupo || null;
+    if (p.quem && PERSONAGENS[p.quem]) {
+      cena.monitora = p.quem;
+      // se alguém de fora do grupo fala, o grupo sai da frente da sala
+      if (cena.grupo && !cena.grupo.includes(p.quem)) cena.grupo = null;
+    }
+  }
   let digitacao = null;
 
   function definirCenario(id) {
@@ -248,6 +260,11 @@ const Som = (() => {
 
   // quem está em cena e quem está falando
   function atualizarElenco(quem) {
+    if (cena.grupo) {
+      const i = cena.grupo.indexOf(quem);
+      Palco.definirElenco(cena.grupo.map(id => PERSONAGENS[id]), estado.personagem, i >= 0 ? i : quem === 'voce' ? 'jogadora' : null, !!cena.ilustracao);
+      return;
+    }
     const falando = quem && PERSONAGENS[quem] ? 'monitora' : quem === 'voce' ? 'jogadora' : null;
     Palco.definirElenco(cena.monitora ? PERSONAGENS[cena.monitora] : null, estado.personagem, falando, !!cena.ilustracao);
   }
@@ -280,7 +297,7 @@ const Som = (() => {
   }
 
   function falar(quem, html, depois) {
-    if (quem && PERSONAGENS[quem]) cena.monitora = quem;
+    elencoDoPasso({ quem });
     atualizarElenco(quem);
     const caixa = $('#caixa-dialogo'), nome = $('#dialogo-nome'), retrato = $('#dialogo-retrato');
     const narracao = !quem || quem === 'narrador';
@@ -307,15 +324,14 @@ const Som = (() => {
   function iniciarOficina(indice, passoInicial = 0) {
     fecharModal();
     const o = OFICINAS[indice];
-    Object.assign(cena, { indice, oficina: o, i: passoInicial, erros: 0, monitora: null, ilustracao: null, cenario: null, esperando: null, aoAvancar: null });
+    Object.assign(cena, { indice, oficina: o, i: passoInicial, erros: 0, monitora: null, grupo: null, ilustracao: null, cenario: null, esperando: null, aoAvancar: null });
     $('#cena-titulo').textContent = `Oficina ${indice + 1} · ${o.titulo}`;
     // ao retomar no meio, reaplica cenário, monitora e ilustração dos passos anteriores
     let cen = 'laboratorio', ilu = null;
     for (let k = 0; k < passoInicial; k++) {
       const p = o.passos[k];
       if (p.cenario) cen = p.cenario;
-      if (p.sozinha) cena.monitora = null;
-      if (p.quem && PERSONAGENS[p.quem]) cena.monitora = p.quem;
+      elencoDoPasso(p);
       if ('ilustracao' in p) ilu = p.ilustracao;
       if (p.tipo === 'resistor' || p.tipo === 'desafio') ilu = null;
     }
@@ -330,7 +346,7 @@ const Som = (() => {
     const p = cena.oficina.passos[cena.i];
     if (!p) { concluirOficina(); return; }
     if (p.cenario) definirCenario(p.cenario);
-    if (p.sozinha) cena.monitora = null;
+    elencoDoPasso(p);
     if ('ilustracao' in p) definirIlustracao(p.ilustracao);
     if (p.tipo === 'quiz') mostrarQuiz(p);
     else if (p.tipo === 'resistor') mostrarMontaResistor(p);

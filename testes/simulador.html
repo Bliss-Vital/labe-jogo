@@ -204,6 +204,7 @@
     const erros = [];
     for (const o of OFICINAS) for (const p of o.passos) {
       if (p.quem && !['voce', 'narrador'].includes(p.quem) && !PERSONAGENS[p.quem]) erros.push(`${o.id}: quem '${p.quem}'`);
+      for (const g of p.grupo || []) if (!PERSONAGENS[g]) erros.push(`${o.id}: grupo '${g}'`);
       if (p.tipo === 'desafio' && !DESAFIOS[p.id]) erros.push(`${o.id}: desafio '${p.id}'`);
       if (p.ilustracao && !Arte.ilustracao(p.ilustracao)) erros.push(`${o.id}: ilustração '${p.ilustracao}'`);
     }

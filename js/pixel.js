@@ -97,6 +97,12 @@ const Palco = (() => {
     if (!ctx) return;
     if (fundo) ctx.drawImage(fundo, 0, 0);
     else { ctx.fillStyle = '#e2d4ee'; ctx.fillRect(0, 0, W, H); }
+    if (Array.isArray(monitora)) {
+      // grupo na frente da sala, lado a lado; a jogadora fica um pouco mais à direita
+      monitora.forEach((m, i) => ator(m.sprite, m.folha, 150 - 38 * (monitora.length - 1 - i) - desloc, true, falando === i));
+      ator(jogadora, 'personagens', 186 - desloc, false, falando === 'jogadora');
+      return;
+    }
     if (monitora) ator(monitora.sprite, monitora.folha, 106 - desloc, true, falando === 'monitora');
     ator(jogadora, 'personagens', 152 - desloc, false, falando === 'jogadora');
   }
@@ -110,7 +116,8 @@ const Palco = (() => {
       .catch(() => { fundo = null; desenhar(); });
   }
 
-  // monitora: { folha, sprite } ou null; quem: 'monitora' | 'jogadora' | null
+  // monitora: { folha, sprite }, uma lista delas (grupo) ou null
+  // quem fala: 'monitora' | 'jogadora' | null, ou a posição dela no grupo (0, 1, 2...)
   // deslocar: abre espaço para a ilustração, à direita
   function definirElenco(qMonitora, qJogadora, quem, deslocar = false) {
     preparar();
@@ -119,7 +126,7 @@ const Palco = (() => {
   }
   function falar(sim) {
     clearInterval(timer); timer = null; quique = 0;
-    if (sim && falando) timer = setInterval(() => { quique ^= 1; desenhar(); }, 170);
+    if (sim && falando !== null) timer = setInterval(() => { quique ^= 1; desenhar(); }, 170);
     desenhar();
   }
 

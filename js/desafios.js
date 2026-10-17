@@ -200,7 +200,7 @@ const DESAFIOS = {
   'liga-motor': {
     titulo: 'Ligue o motor',
     objetivo: 'Ligue o **motor** na fonte: um terminal no **+** e o outro no **−**. Depois ligue a fonte e veja a hélice girar!',
-    monitora: 'julia',
+    monitora: 'julia-robotica',
     intro: 'O motor tem dois terminais, um deles com a marca vermelha. Encaixe ele na placa e use fios para levar o + e o − da fonte até as colunas dos terminais.',
     gaveta: { motor: true, fios: true },
     dicas: [
@@ -219,7 +219,7 @@ const DESAFIOS = {
   'inverte-motor': {
     titulo: 'Inverta o sentido',
     objetivo: 'Faça o motor girar para o **outro lado**.',
-    monitora: 'julia',
+    monitora: 'julia-robotica',
     intro: 'O sentido do giro depende de para onde a corrente vai dentro do motor. Como será que dá para mudar isso?',
     gaveta: { motor: true, fios: true },
     manterMontagem: true,
@@ -239,7 +239,7 @@ const DESAFIOS = {
   'motor-devagar': {
     titulo: 'Mais devagar',
     objetivo: 'Coloque um **resistor em série** com o motor para ele girar **mais devagar**, mas sem parar.',
-    monitora: 'julia',
+    monitora: 'julia-robotica',
     intro: 'Em série, a corrente passa pelo resistor e depois pelo motor. Parte da tensão fica no resistor e sobra menos para o motor.',
     gaveta: { motor: true, fios: true, resistores: [10, 47, 220] },
     manterMontagem: true,
