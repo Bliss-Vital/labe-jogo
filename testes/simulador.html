@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Testes do simulador</title></head>
+<body>
+<pre id="saida">rodando...</pre>
+<script src="../js/arte.js"></script>
+<script src="../js/simulador.js"></script>
+<script src="../js/desafios.js"></script>
+<script>
+  // Nos testes, o nome do furo é o próprio nó; "S1#a" e "S1#b" são dois furos da mesma coluna.
+  const noBase = id => id.split('#')[0];
+  let n = 0;
+  const pecas = lista => lista.map(p => ({ id: 'p' + (++n), ...p }));
+  const R = (a, b, valor) => ({ tipo: 'resistor', a, b, valor });
+  const L = (a, b, cor = 'vermelho') => ({ tipo: 'led', a, b, cor });
+  const F = (a, b) => ({ tipo: 'fio', a, b, cor: '#000' });
+  const sim = lista => Simulador.simular(lista, noBase);
+  const ctx = (lista, sondas = { v: null, p: null }) => {
+    const res = sim(lista);
+    return {
+      pecas: lista, sondas, ligada: true, res,
+      leitura: sondas.v && sondas.p ? res.tensao(sondas.v) - res.tensao(sondas.p) : null,
+      mesmaColuna: p => noBase(p.a) === noBase(p.b), no: id => res.no(id), nomePeca: () => 'A peça',
+    };
+  };
+  const mA = i => (i * 1000).toFixed(2) + ' mA';
+  const resultados = [];
+  function teste(nome, fn) {
+    try { const extra = fn(); resultados.push(`ok    ${nome}${extra ? '  (' + extra + ')' : ''}`); }
+    catch (e) { resultados.push(`FALHA ${nome}: ${e.message}`); }
+  }
+  const afirmar = (cond, msg) => { if (!cond) throw new Error(msg); };
+
+  teste('LED + 220 Ω acende com ~13,8 mA', () => {
+    const r = sim(pecas([R('TP', 'S1', 220), L('S1', 'TN')]));
+    const l = r.leds[0];
+    afirmar(l.aceso && Math.abs(l.corrente - 0.01379) < 0.0002, 'corrente ' + mA(l.corrente));
+    afirmar(Math.abs(r.correnteFonte - l.corrente) < 1e-5, 'fonte ' + mA(r.correnteFonte));
+    return mA(l.corrente);
+  });
+  teste('LED direto na fonte queima', () => {
+    const p = pecas([L('TP', 'TN')]);
+    const r = sim(p);
+    afirmar(r.queimouAgora.length === 1 && p[0].queimado && !r.leds[0].aceso, 'não queimou');
+  });
+  teste('fio do + ao − dá curto', () => afirmar(sim(pecas([F('TP', 'TN')])).curto, 'sem curto'));
+  teste('fios até as trilhas de baixo funcionam', () => {
+    const r = sim(pecas([F('BP', 'S1'), R('S1', 'S2', 220), L('S2', 'S3'), F('S3', 'BN')]));
+    afirmar(r.leds[0].aceso, 'apagado');
+  });
+  teste('LED invertido não acende e é detectado', () => {
+    const r = sim(pecas([R('TP', 'S1', 220), L('TN', 'S1')]));
+    afirmar(!r.leds[0].aceso && r.leds[0].invertido, 'vak ' + r.leds[0].vak);
+  });
+  teste('LED com 10 kΩ fica fraquinho (não conta como aceso)', () => {
+    const r = sim(pecas([R('TP', 'S1', 10000), L('S1', 'TN')]));
+    afirmar(!r.leds[0].aceso && r.leds[0].corrente > 1e-5, mA(r.leds[0].corrente));
+    return mA(r.leds[0].corrente);
+  });
+  teste('dois LEDs em série', () => {
+    const c = ctx(pecas([R('TP', 'S1', 220), L('S1', 'S2'), L('S2', 'TN', 'verde')]));
+    afirmar(c.res.leds.every(l => l.aceso), 'apagados');
+    afirmar(DESAFIOS.serie.verificar(c) && !DESAFIOS.paralelo.verificar(c), 'classificação errada');
+    return mA(c.res.leds[0].corrente);
+  });
+  teste('dois LEDs em paralelo, um resistor para cada', () => {
+    const c = ctx(pecas([R('TP', 'S1', 220), L('S1', 'TN'), R('TP', 'S2', 220), L('S2', 'TN', 'verde')]));
+    afirmar(DESAFIOS.paralelo.verificar(c) && !DESAFIOS.serie.verificar(c), 'classificação errada');
+    return 'fonte ' + mA(c.res.correnteFonte);
+  });
+  teste('paralelo com cores diferentes no mesmo resistor: um apaga', () => {
+    const c = ctx(pecas([R('TP', 'S1', 220), L('S1', 'TN'), L('S1#b', 'TN#b', 'verde')]));
+    afirmar(c.res.leds[0].aceso && !c.res.leds[1].aceso, 'os dois acesos?');
+    const d = DESAFIOS.paralelo.dicaAoVivo(c);
+    afirmar(d && /resistor para cada/.test(d.texto), 'sem dica');
+  });
+  teste('dois LEDs azuis em série não acendem com 5 V', () => {
+    const r = sim(pecas([R('TP', 'S1', 100), L('S1', 'S2', 'azul'), L('S2', 'TN', 'azul')]));
+    afirmar(r.leds.every(l => !l.aceso), 'acenderam');
+  });
+  teste('circuito aberto: nada de corrente', () => {
+    const r = sim(pecas([R('TP', 'S1', 220), L('S2', 'TN')]));
+    afirmar(r.correnteFonte < 1e-6 && !r.leds[0].aceso, mA(r.correnteFonte));
+    afirmar(/aberto/.test(dicaAutomatica(ctx(pecas([R('TP', 'S1', 220), L('S2', 'TN')])), null).texto), 'sem dica');
+  });
+  teste('LED com as pernas na mesma coluna é avisado', () => {
+    const c = ctx(pecas([R('TP', 'S1', 220), L('S2#a', 'S2#b')]));
+    afirmar(/mesmo grupo/.test(dicaAutomatica(c, null).texto), 'sem aviso');
+  });
+  teste('multímetro: tensão do LED e do resistor somam 5 V', () => {
+    const p = pecas([R('TP', 'S1', 220), L('S1', 'TN')]);
+    const cLed = ctx(p, { v: 'S1', p: 'TN' });
+    const cRes = ctx(p, { v: 'TP', p: 'S1' });
+    afirmar(DESAFIOS['medir-led'].verificar(cLed), 'medir-led falhou');
+    afirmar(DESAFIOS['medir-resistor'].verificar(cRes), 'medir-resistor falhou');
+    afirmar(Math.abs(cLed.leitura + cRes.leitura - 5) < 0.01, 'soma ' + (cLed.leitura + cRes.leitura));
+    const vars = DESAFIOS['medir-resistor'].aoConcluir(cRes);
+    return `LED ${cLed.leitura.toFixed(2)} V, resistor ${cRes.leitura.toFixed(2)} V, I = ${vars.medidaI} mA`;
+  });
+  teste('multímetro com pontas invertidas mostra negativo e não conclui', () => {
+    const c = ctx(pecas([R('TP', 'S1', 220), L('S1', 'TN')]), { v: 'TN', p: 'S1' });
+    afirmar(c.leitura < 0 && !DESAFIOS['medir-led'].verificar(c), 'leitura ' + c.leitura);
+  });
+  teste('código de cores', () => {
+    afirmar(Arte.faixasDoValor(220).join() === 'vermelho,vermelho,marrom', '220');
+    afirmar(Arte.faixasDoValor(10000).join() === 'marrom,preto,laranja', '10k');
+    afirmar(Arte.valorDasFaixas(['amarelo', 'violeta', 'vermelho']) === 4700, '4k7');
+    afirmar(Arte.ohms(4700) === '4,7 kΩ', Arte.ohms(4700));
+  });
+
+  const falhas = resultados.filter(r => r.startsWith('FALHA')).length;
+  document.getElementById('saida').textContent = resultados.join('\n') + `\n\n${resultados.length - falhas}/${resultados.length} passaram`;
+  document.title = falhas ? 'FALHOU' : 'OK';
+</script>
+</body>
+</html>

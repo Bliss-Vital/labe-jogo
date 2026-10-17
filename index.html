@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jogo LABe</title>
+<meta name="description" content="Jogo das oficinas LABe — Mulheres no Laboratório de Eletrônica: aprenda eletrônica básica e monte circuitos na bancada.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Gochi+Hand&family=Nunito:wght@400;600;700;800;900&display=swap">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ============================================================ tela inicial -->
+  <section id="tela-inicio" class="tela ativa" aria-label="Início">
+    <div class="inicio-deco" id="inicio-deco" aria-hidden="true"></div>
+    <div class="inicio-cartao">
+      <div class="logo" aria-label="LABe">LABe<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="15" r="11" fill="none" stroke="currentColor" stroke-width="4"/><path d="M14 15 H19 M22 15 H27 M24.5 12.5 V17.5 M20 26 V38 M14 32 H26" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></div>
+      <p class="subtitulo">Mulheres no Laboratório de Eletrônica</p>
+      <h1>O jogo da oficina</h1>
+      <p class="convite">Entre no laboratório, aprenda com as monitoras e monte seus primeiros circuitos na bancada. Não precisa de conhecimentos prévios!</p>
+      <form id="form-nome" class="campo-nome" autocomplete="off">
+        <label for="nome">Como você quer ser chamada?</label>
+        <input id="nome" name="nome" maxlength="20" placeholder="Seu nome" required>
+        <div class="inicio-acoes">
+          <button type="submit" class="btn btn-grande btn-rosa" id="btn-comecar">Entrar no laboratório</button>
+          <button type="button" class="btn btn-claro" id="btn-continuar" hidden>Continuar</button>
+        </div>
+      </form>
+      <p class="creditos">Projeto de extensão LABe · UFABC</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ oficinas -->
+  <section id="tela-mapa" class="tela" aria-label="Oficinas">
+    <header class="barra">
+      <span class="titulo">LABe · Oficinas</span>
+      <button type="button" class="btn-icone btn-som">🔊</button>
+    </header>
+    <div class="mapa-conteudo">
+      <h2 id="mapa-saudacao">Olá!</h2>
+      <p class="apresentacao">Cada oficina tem uma parte de conversa com as monitoras e uma parte de mão na massa na bancada. Complete uma para liberar a próxima.</p>
+      <div id="lista-oficinas" class="lista-oficinas"></div>
+      <div class="mapa-rodape">
+        <button type="button" class="btn" id="btn-certificado" hidden>Ver meu certificado</button>
+        <button type="button" class="btn-link" id="btn-trocar">Trocar de jogadora / recomeçar do zero</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ cena -->
+  <section id="tela-cena" class="tela" aria-label="História">
+    <div id="cena-fundo" class="cena-fundo" aria-hidden="true"></div>
+    <header class="barra">
+      <button type="button" class="btn-icone" id="btn-voltar-mapa" aria-label="Voltar para as oficinas" title="Voltar para as oficinas">☰</button>
+      <span class="titulo" id="cena-titulo"></span>
+      <button type="button" class="btn-icone btn-som">🔊</button>
+    </header>
+    <div id="cena-personagem" class="cena-personagem oculto" aria-hidden="true"></div>
+    <div id="cena-ilustracao" class="cena-ilustracao" hidden></div>
+    <div id="caixa-dialogo" class="caixa-dialogo" aria-live="polite">
+      <div id="dialogo-nome" class="dialogo-nome" hidden></div>
+      <div id="dialogo-texto" class="dialogo-texto"></div>
+      <div id="dialogo-opcoes" class="dialogo-opcoes"></div>
+      <div id="dialogo-feedback" class="dialogo-feedback" hidden></div>
+      <div id="dialogo-seta" class="dialogo-seta" hidden aria-hidden="true">clique para continuar ▼</div>
+    </div>
+  </section>
+
+  <!-- ============================================================ bancada -->
+  <section id="tela-bancada" class="tela" aria-label="Bancada">
+    <header class="barra">
+      <button type="button" class="btn-icone" id="btn-sair-bancada" aria-label="Sair do desafio" title="Sair do desafio">☰</button>
+      <div class="bancada-objetivo" id="bancada-objetivo"></div>
+      <button type="button" class="btn-icone btn-som">🔊</button>
+    </header>
+    <div class="bancada-corpo">
+      <div class="bancada-area">
+        <div class="placa-rolagem"><svg id="placa" role="application" aria-label="Protoboard com fonte e multímetro"></svg></div>
+        <div class="bancada-status" aria-live="polite">
+          <span class="instrucao" id="status-instrucao"></span>
+          <span class="conexao" id="status-conexao"></span>
+        </div>
+      </div>
+      <aside class="bancada-lateral">
+        <div class="dica-monitora" id="dica-monitora" aria-live="polite">
+          <div class="dica-avatar" id="dica-avatar"></div>
+          <div><div class="dica-nome" id="dica-nome"></div><p class="dica-texto" id="dica-texto"></p></div>
+        </div>
+        <div class="acoes">
+          <button type="button" class="btn btn-fonte largo" id="btn-fonte">Ligar fonte</button>
+          <button type="button" class="acao" id="btn-dica">Pedir dica</button>
+          <button type="button" class="acao" id="btn-desfazer">Desfazer</button>
+          <button type="button" class="acao" id="btn-remover">Remover peça</button>
+          <button type="button" class="acao" id="btn-inverter">Inverter peça</button>
+          <button type="button" class="acao largo" id="btn-limpar">Limpar bancada</button>
+        </div>
+        <div class="gaveta">
+          <h3>Gaveta de componentes</h3>
+          <div id="gaveta-itens"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============================================================ certificado -->
+  <section id="tela-certificado" class="tela" aria-label="Certificado">
+    <div class="certificado">
+      <div class="logo">LABe</div>
+      <h2>Certificado de conclusão do jogo</h2>
+      <p>Este certificado reconhece que</p>
+      <div class="nome" id="cert-nome"></div>
+      <p>completou todas as oficinas do jogo <strong>LABe — Mulheres no Laboratório de Eletrônica</strong>, montando e medindo circuitos na bancada virtual:</p>
+      <ul id="cert-lista"></ul>
+      <p class="data" id="cert-data"></p>
+      <button type="button" class="btn" id="btn-cert-voltar">Voltar às oficinas</button>
+    </div>
+  </section>
+
+</div>
+<script src="js/arte.js"></script>
+<script src="js/simulador.js"></script>
+<script src="js/historia.js"></script>
+<script src="js/desafios.js"></script>
+<script src="js/bancada.js"></script>
+<script src="js/motor.js"></script>
+</body>
+</html>
