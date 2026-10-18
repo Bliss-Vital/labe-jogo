@@ -5,7 +5,7 @@ e os desafios da bancada. Serve para a equipe do LABe revisar o conteúdo e comp
 de verdade.
 
 Jogar online: <https://bliss-vital.github.io/labe-jogo/>. Para abrir todas as oficinas sem jogar na
-ordem, coloque `#livre` no fim do link.
+ordem, coloque `#livre` no fim do link, ou digite `123juliavital` no lugar do nome.
 
 ## A equipe no jogo
 

@@ -35,7 +35,8 @@ Não precisa instalar nada: dê dois cliques em `index.html` e o jogo abre no na
 O progresso fica salvo no próprio navegador.
 
 **Modo monitora:** abra com `index.html?livre` (no link online, use `#livre` no fim) para liberar
-todas as oficinas sem precisar jogar na ordem.
+todas as oficinas sem precisar jogar na ordem. Outro jeito é digitar `123juliavital` no lugar do nome:
+as oficinas ficam liberadas neste navegador até alguém entrar com outro nome ou clicar em recomeçar.
 
 ## Como editar o conteúdo
 

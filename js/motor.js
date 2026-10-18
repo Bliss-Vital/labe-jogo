@@ -47,12 +47,14 @@ const Som = (() => {
   const $ = s => document.querySelector(s);
   const CHAVE = 'labe-jogo-v1';
   const MODO_LIVRE = /[?&#]livre\b/.test(location.search + location.hash);
+  // digitado no lugar do nome, libera todas as oficinas (fica salvo até trocar de nome)
+  const CODIGO_LIVRE = '123juliavital';
 
   // ---------------------------------------------------------------- progresso salvo
   function carregar() {
     try { const s = localStorage.getItem(CHAVE); return s ? JSON.parse(s) : null; } catch (e) { return null; }
   }
-  const estado = Object.assign({ nome: '', personagem: null, concluidas: {}, vars: {}, som: true }, carregar() || {});
+  const estado = Object.assign({ nome: '', personagem: null, concluidas: {}, vars: {}, som: true, livre: false }, carregar() || {});
   function salvar() {
     try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) { /* navegador sem armazenamento */ }
   }
@@ -196,6 +198,7 @@ const Som = (() => {
       estado.vars = {};
     }
     estado.nome = nome;
+    estado.livre = nome.toLowerCase() === CODIGO_LIVRE;
     estado.personagem = escolhida;
     salvar();
     Som.tocar('certo');
@@ -204,7 +207,7 @@ const Som = (() => {
   $('#btn-voltar-abertura').addEventListener('click', abrirApresentacao);
 
   // ---------------------------------------------------------------- mapa das oficinas
-  const liberada = i => MODO_LIVRE || i === 0 || !!estado.concluidas[OFICINAS[i - 1].id];
+  const liberada = i => MODO_LIVRE || estado.livre || i === 0 || !!estado.concluidas[OFICINAS[i - 1].id];
   function abrirMapa() {
     fecharModal();
     Bancada.parar();
@@ -618,7 +621,7 @@ const Som = (() => {
   $('#btn-trocar-personagem').addEventListener('click', abrirEscolha);
   $('#btn-trocar').addEventListener('click', () => {
     confirmar('Isso apaga o progresso salvo neste navegador e volta para o começo.', 'Recomeçar', () => {
-      Object.assign(estado, { nome: '', personagem: null, concluidas: {}, vars: {} });
+      Object.assign(estado, { nome: '', personagem: null, concluidas: {}, vars: {}, livre: false });
       salvar();
       abrirApresentacao();
     });
