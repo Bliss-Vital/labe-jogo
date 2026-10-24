@@ -121,12 +121,12 @@ const OFICINAS = [
         ],
       },
       {
-        tipo: 'quiz', quem: 'suzanne', ilustracao: 'resistor:laranja,laranja,marrom', pergunta: 'E este aqui?',
+        tipo: 'quiz', quem: 'suzanne', ilustracao: 'resistor:vermelho,preto,laranja', pergunta: 'E este aqui?',
         opcoes: [
-          { texto: '330 Ω', certa: true, resposta: 'Laranja (3), laranja (3), marrom (1 zero): 330 Ω. Arrasou!' },
-          { texto: '33 Ω', resposta: 'Lembra do zero que o marrom pede no final!' },
-          { texto: '3300 Ω', resposta: 'Marrom no multiplicador é só 1 zero.' },
-          { texto: '331 Ω', resposta: 'A 3ª faixa é o multiplicador, não um dígito.' },
+          { texto: '20 000 Ω', certa: true, resposta: 'Vermelho (2), preto (0), laranja (3 zeros): 20 000 Ω = 20 kΩ. Arrasou!' },
+          { texto: '2000 Ω', resposta: 'Laranja é 3, então são **três** zeros depois do 20.' },
+          { texto: '200 Ω', resposta: 'Lembra dos zeros que o laranja pede no final: são três!' },
+          { texto: '203 Ω', resposta: 'A 3ª faixa é o multiplicador, não um dígito.' },
         ],
       },
       {

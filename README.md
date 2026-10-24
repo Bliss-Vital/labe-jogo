@@ -39,7 +39,8 @@ Ao concluir tudo, aparece um certificado de conclusão do jogo com o nome da par
 ## Como jogar no computador
 
 Não precisa instalar nada: dê dois cliques em `index.html` e o jogo abre no navegador.
-O progresso fica salvo no próprio navegador.
+O progresso fica salvo no próprio navegador. As falas passam com um clique, com a barra de espaço, o
+Enter ou as setas → e ↓.
 
 **Modo monitora:** abra com `index.html?livre` (no link online, use `#livre` no fim) para liberar
 todas as oficinas sem precisar jogar na ordem. Outro jeito é digitar `123juliavital` no lugar do nome:

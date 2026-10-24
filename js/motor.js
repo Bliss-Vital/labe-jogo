@@ -668,11 +668,15 @@ const Som = (() => {
     if (ev.target.closest('#cena-ilustracao') && ['resistor', 'pwm', 'osciloscopio'].includes(cena.esperando)) return;
     tocarAvanco();
   });
+  // espaço, Enter e as setas → e ↓ passam as falas (a seta ↑ é do minijogo do PWM)
+  const TECLAS_AVANCO = [' ', 'Enter', 'ArrowRight', 'ArrowDown'];
   document.addEventListener('keydown', ev => {
     if (!telaAtiva('tela-cena') || $('#modal')) return;
-    if (ev.key !== ' ' && ev.key !== 'Enter') return;
+    if (!TECLAS_AVANCO.includes(ev.key)) return;
     const ativo = document.activeElement;
-    if (ativo && (ativo.tagName === 'BUTTON' || ativo.tagName === 'INPUT') && !ativo.disabled) return;
+    // num botão em foco, espaço e Enter apertam o botão; as setas só não passam a fala dentro de um campo
+    const seta = ev.key.startsWith('Arrow');
+    if (ativo && !ativo.disabled && (ativo.tagName === 'INPUT' || (!seta && ativo.tagName === 'BUTTON'))) return;
     ev.preventDefault();
     tocarAvanco();
   });

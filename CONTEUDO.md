@@ -39,7 +39,7 @@ As personagens que a jogadora pode escolher são os quadros **1, 2, 4, 5, 7 e 10
 
 - A Suzanne explica as faixas coloridas do resistor, com a tabela de cores embaixo do resistor.
 - Exemplo explicado: marrom, preto, vermelho = 1000 Ω = 1 kΩ. A 4ª faixa é a tolerância.
-- **Perguntas:** valor de três resistores (220 Ω, 330 Ω e 10 kΩ).
+- **Perguntas:** valor de três resistores (220 Ω, 20 kΩ e 10 kΩ).
 - **Minijogo:** montar um resistor de 4,7 kΩ escolhendo as cores das faixas.
 - A Profª Alejandra apresenta a **Lei de Ohm** (V = R × I), com duas perguntas de conta.
 
