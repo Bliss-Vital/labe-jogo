@@ -254,19 +254,21 @@ const Arte = (() => {
     },
 
     protoboard() {
-      const x0 = 70, px = 42, nC = 10;
-      const yT = [36, 60], yA = 100, yF = 224, py = 22;
-      let s = `<rect x="30" y="14" width="460" height="330" rx="12" fill="#f3f2ee" stroke="#d0cec6" stroke-width="2"/>
+      const x0 = 70, px = 42, nC = 10, py = 22;
+      const yT = [36, 60], yA = 100, yF = 224;   // trilhas de cima (+ e −), linha a, linha f
+      const yB = [yF + 4 * py + 40, yF + 4 * py + 64]; // trilhas de baixo (+ e −), como na bancada
+      const fim = yB[1] + 22;
+      let s = `<rect x="30" y="14" width="460" height="${fim - 14}" rx="12" fill="#f3f2ee" stroke="#d0cec6" stroke-width="2"/>
         <rect x="30" y="${yA + 4 * py + 12}" width="460" height="${yF - yA - 4 * py - 24}" fill="#e2e0d9"/>
         <path d="M44 ${yT[0] - 12} H476" stroke="#e05555" stroke-width="2.5"/><path d="M44 ${yT[1] + 12} H476" stroke="#4f7fe0" stroke-width="2.5"/>
-        <path d="M44 ${yF + 4 * py + 20} H476" stroke="#e05555" stroke-width="2.5"/><path d="M44 ${yF + 4 * py + 46} H476" stroke="#4f7fe0" stroke-width="2.5"/>`;
+        <path d="M44 ${yB[0] - 12} H476" stroke="#e05555" stroke-width="2.5"/><path d="M44 ${yB[1] + 12} H476" stroke="#4f7fe0" stroke-width="2.5"/>`;
       // destaques: trilha + inteira, coluna 3 (a–e) e coluna 7 (f–j)
       s += `<rect x="${x0 - 14}" y="${yT[0] - 9}" width="${(nC - 1) * px + 28}" height="18" rx="9" fill="#e05555" opacity=".25"/>`;
       s += `<rect x="${x0 + 2 * px - 11}" y="${yA - 11}" width="22" height="${4 * py + 22}" rx="11" fill="#2fbf71" opacity=".35"/>`;
       s += `<rect x="${x0 + 6 * px - 11}" y="${yF - 11}" width="22" height="${4 * py + 22}" rx="11" fill="#2fbf71" opacity=".35"/>`;
       for (let c = 0; c < nC; c++) {
         const x = x0 + c * px;
-        for (const y of [...yT, yF + 4 * py + 33, yF + 4 * py + 33 + 0]) s += `<rect x="${x - 4}" y="${y - 4}" width="8" height="8" rx="1.5" fill="#3b3b3b"/>`;
+        for (const y of [...yT, ...yB]) s += `<rect x="${x - 4}" y="${y - 4}" width="8" height="8" rx="1.5" fill="#3b3b3b"/>`;
         for (let l = 0; l < 5; l++) {
           s += `<rect x="${x - 4}" y="${yA + l * py - 4}" width="8" height="8" rx="1.5" fill="#3b3b3b"/>`;
           s += `<rect x="${x - 4}" y="${yF + l * py - 4}" width="8" height="8" rx="1.5" fill="#3b3b3b"/>`;
@@ -274,16 +276,18 @@ const Arte = (() => {
       }
       'abcde'.split('').forEach((l, i) => { s += texto(48, yA + i * py + 5, l, { tam: 12, cor: '#888' }); });
       'fghij'.split('').forEach((l, i) => { s += texto(48, yF + i * py + 5, l, { tam: 12, cor: '#888' }); });
-      s += texto(510, yT[0] + 5, 'trilha +', { tam: 15, peso: 800, cor: '#d62828', ancora: 'start' });
-      s += texto(510, yT[1] + 5, 'trilha −', { tam: 15, peso: 800, cor: '#2364d2', ancora: 'start' });
-      s += texto(510, yT[0] + 24, '(ligada ↔)', { tam: 12, ancora: 'start' }).replace('y="65"', 'y="65"');
+      for (const y of [yT, yB]) {
+        s += texto(510, y[0] + 5, 'trilha +', { tam: 15, peso: 800, cor: '#d62828', ancora: 'start' });
+        s += texto(510, y[1] + 5, 'trilha −', { tam: 15, peso: 800, cor: '#2364d2', ancora: 'start' });
+      }
+      s += texto(510, yT[1] + 24, '(ligadas ↔)', { tam: 12, ancora: 'start' });
       s += texto(510, yA + 2 * py, 'coluna', { tam: 15, peso: 800, cor: '#1f8f52', ancora: 'start' });
       s += texto(510, yA + 2 * py + 18, 'de 5 furos', { tam: 13, ancora: 'start' });
       s += texto(510, yA + 2 * py + 34, '(ligada ↕)', { tam: 12, ancora: 'start' });
       s += texto(510, yA + 4 * py + 32, 'canal:', { tam: 14, peso: 800, ancora: 'start' });
       s += texto(510, yA + 4 * py + 48, 'separa', { tam: 12, ancora: 'start' });
       s += texto(510, yA + 4 * py + 62, 'cima e baixo', { tam: 12, ancora: 'start' });
-      return [600, 360, s];
+      return [600, fim + 12, s];
     },
 
     led() {
