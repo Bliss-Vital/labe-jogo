@@ -41,6 +41,13 @@
     return { achar, unir };
   }
 
+  // Soma a condutância g entre os nós i e j na matriz da análise nodal (−1 = referência).
+  function somarCondutancia(A, i, j, g) {
+    if (i >= 0) A[i][i] += g;
+    if (j >= 0) A[j][j] += g;
+    if (i >= 0 && j >= 0) { A[i][j] -= g; A[j][i] -= g; }
+  }
+
   // Resolve A·x = b por eliminação de Gauss com pivoteamento parcial.
   function resolverSistema(A, b) {
     const n = b.length;
@@ -137,11 +144,7 @@
     for (let volta = 0; volta < 60; volta++) {
       const A = Array.from({ length: n }, () => new Float64Array(n));
       const b = new Float64Array(n);
-      const condutancia = (i, j, g) => {
-        if (i >= 0) A[i][i] += g;
-        if (j >= 0) A[j][j] += g;
-        if (i >= 0 && j >= 0) { A[i][j] -= g; A[j][i] -= g; }
-      };
+      const condutancia = (i, j, g) => somarCondutancia(A, i, j, g);
       for (let i = 0; i < n; i++) A[i][i] += G_MIN;
       condutancia(iPos, -1, 1 / FONTE_R);
       b[iPos] += FONTE_V / FONTE_R;
@@ -219,5 +222,42 @@
     }
   }
 
-  raiz.Simulador = { simular, FONTE_V, LED, BUZZER, MOTOR };
+  /*
+   * Ohmímetro: resistência entre os furos a e b, com a fonte desligada. O multímetro faz passar
+   * uma correntinha de teste e mede a tensão; ela é pequena demais para acender LEDs, então LEDs
+   * e buzzers contam como abertos. O motor parado vale a resistência da bobina.
+   * Sem caminho entre os dois pontos, devolve Infinity (o visor mostra OL).
+   */
+  const OHMIMETRO_MAX = 20e6;   // acima de 20 MΩ o multímetro mostra OL
+  function resistencia(pecas, noDoFuro, a, b) {
+    const uniao = criarUniao();
+    uniao.unir('TP', 'BP');
+    uniao.unir('TN', 'BN');
+    for (const p of pecas) if (p.tipo === 'fio') uniao.unir(noDoFuro(p.a), noDoFuro(p.b));
+    const no = furo => uniao.achar(noDoFuro(furo));
+    const NA = no(a), NB = no(b);
+    if (NA === NB) return 0;
+
+    // o nó da ponta b é a referência (0 V)
+    const indice = new Map();
+    const idx = n => {
+      if (n === NB) return -1;
+      if (!indice.has(n)) indice.set(n, indice.size);
+      return indice.get(n);
+    };
+    const ia = idx(NA);
+    const ramos = pecas.filter(p => p.tipo === 'resistor' || p.tipo === 'motor')
+      .map(p => ({ i: idx(no(p.a)), j: idx(no(p.b)), g: 1 / (p.tipo === 'motor' ? MOTOR.resistencia : p.valor) }));
+    const n = indice.size;
+    const A = Array.from({ length: n }, () => new Float64Array(n));
+    for (let i = 0; i < n; i++) A[i][i] += G_MIN;
+    for (const r of ramos) somarCondutancia(A, r.i, r.j, r.g);
+    // com 1 A de teste entrando por a, a tensão em a é a própria resistência
+    const corrente = new Float64Array(n);
+    corrente[ia] = 1;
+    const r = resolverSistema(A, corrente)[ia];
+    return r > OHMIMETRO_MAX ? Infinity : r;
+  }
+
+  raiz.Simulador = { simular, resistencia, FONTE_V, LED, BUZZER, MOTOR };
 })(typeof window !== 'undefined' ? window : globalThis);

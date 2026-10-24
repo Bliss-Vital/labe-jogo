@@ -11,14 +11,14 @@ ordem, coloque `#livre` no fim do link, ou digite `123juliavital` no lugar do no
 
 | Personagem | Papel | Desenho (quadro do Piskel) | Onde aparece |
 | --- | --- | --- | --- |
-| Profª Alejandra | professora, coordena o projeto | 6 | abertura e fechamento das oficinas, Lei de Ohm |
+| Profª Alejandra | professora, coordena o projeto | 6 | abertura e fechamento das oficinas, Lei de Ohm, divisor de tensão |
 | Suzanne | monitora | `monitoras.piskel`, 2º quadro | oficinas 2 e 4 |
 | Aline | monitora | 9 | oficinas 1, 3 e 5 |
 | Letícia | monitora | 8 | oficinas 1 e 4 |
-| Julia | monitora | 12 | (reservada; na oficina de motores ela usa o uniforme da robótica) |
-| Técnica Marta | técnica do laboratório | 11 | oficinas 1, 3 e 6 |
-| Técnica Lívia | técnica do laboratório | 3 | oficinas 2 e 5 |
-| Aline, Letícia e Julia de uniforme verde | equipe de robótica **Project Neon** | 13, 14 e 15 | oficinas 6 e 7 |
+| Julia | monitora | 12 | oficina 6 (nas oficinas 7, 8 e 9 ela usa o uniforme da robótica) |
+| Técnica Marta | técnica do laboratório | 11 | oficinas 1, 3, 7 e 9 |
+| Técnica Lívia | técnica do laboratório | 3 | oficinas 2, 5, 6 e 9 |
+| Aline, Letícia e Julia de uniforme verde | equipe de robótica **Project Neon** | 13, 14 e 15 | oficinas 7 e 8 (a Julia também na 9) |
 
 As personagens que a jogadora pode escolher são os quadros **1, 2, 4, 5, 7 e 10**.
 
@@ -70,7 +70,30 @@ As personagens que a jogadora pode escolher são os quadros **1, 2, 4, 5, 7 e 10
 - A Profª Alejandra usa a medida da jogadora para calcular a corrente pela Lei de Ohm.
 - **Perguntas:** onde encostar as pontas; para onde vai o resto da tensão da fonte.
 
-## Oficina 6 · Motores elétricos
+## Oficina 6 · Circuitos equivalentes
+
+**Equipe:** Profª Alejandra, Julia e técnica Lívia.
+
+Feita a partir do capítulo 1 do livro *A Arte da Eletrônica* (Horowitz e Hill).
+
+- A Julia explica a ideia de **circuito equivalente** com uma “caixa fechada” de resistores vista por dois pontos, A e B.
+- A Lívia apresenta o **ohmímetro**: seletor em Ω, circuito desligado e **OL** quando não há caminho.
+  Na bancada, o seletor do multímetro gira com um clique entre V⎓ e Ω.
+- **Série:** R = R1 + R2. **Paralelo:** R = (R1 × R2) ÷ (R1 + R2), dois iguais valem a metade, e um
+  resistor grande em paralelo com um pequeno vale quase o pequeno.
+- **Desafios:** montar 3,2 kΩ com dois resistores em série (1 kΩ + 2,2 kΩ) e 500 Ω com dois de 1 kΩ em
+  paralelo, medindo com o ohmímetro.
+- A Profª Alejandra apresenta o **divisor de tensão**: Vsaída = Vfonte × R2 ÷ (R1 + R2).
+- **Desafio:** montar um divisor que dê 2,5 V (metade da fonte) e medir.
+- A Julia apresenta o **equivalente de Thévenin**: a fonte de Thévenin é a tensão sem carga e o resistor
+  de Thévenin é R1 em paralelo com R2. O jogo usa os valores que a jogadora mediu.
+- **Desafio:** ligar uma carga no divisor sem deixar a saída cair abaixo de 2,3 V (só a de 10 kΩ serve),
+  e a regra prática: a carga deve ser pelo menos 10 vezes maior que o resistor de Thévenin.
+- **Perguntas:** o que fazer antes de medir resistência; 220 Ω + 330 Ω em série; dois de 1 kΩ em paralelo;
+  10 kΩ em paralelo com 100 Ω; um divisor de 1 kΩ e 4 kΩ; um Thévenin de 2,5 V e 500 Ω com carga de
+  500 Ω; por que o divisor não serve para alimentar o motor.
+
+## Oficina 7 · Motores elétricos
 
 **Equipe:** Profª Alejandra, Aline, Letícia e Julia (de uniforme da robótica) e técnica Marta.
 
@@ -85,7 +108,7 @@ As personagens que a jogadora pode escolher são os quadros **1, 2, 4, 5, 7 e 10
 - **Perguntas:** o que o motor transforma; como um robô anda de ré; o que é PWM de 25%; por que não
   ligar o motor direto no pino do Arduino.
 
-## Oficina 7 · Arduino: primeiros passos
+## Oficina 8 · Arduino: primeiros passos
 
 **Equipe:** Profª Alejandra e Aline, Letícia e Julia de uniforme da robótica.
 
@@ -95,6 +118,30 @@ As personagens que a jogadora pode escolher são os quadros **1, 2, 4, 5, 7 e 10
 - **Desafios:** pisca LED no pino 13 (o LED "L" da placa pisca junto); fazer o buzzer apitar no pino 8.
 - **Perguntas:** o que é o Arduino; qual pino liga e desliga um LED; quanto tempo é `delay(500)`;
   o que muda trocando `delay(1000)` por `delay(250)`.
+- No fim, a Profª Alejandra lembra que as próximas oficinas do LABe usam sensores e anuncia o chefão final.
+
+## Oficina 9 · Chefão final: o osciloscópio
+
+**Equipe:** Profª Alejandra, técnica Marta, técnica Lívia e Julia (de uniforme da robótica).
+
+- O osciloscópio aparece como o **chefão final** do laboratório. No alto da cena fica a barra de vida dele:
+  cada pergunta certa e cada rodada do minijogo vencida tira um pedaço (são 10 ao todo).
+- A Marta explica o que o osciloscópio faz: **desenha a tensão ao longo do tempo**. A tela tem uma grade
+  de 10 × 8 **divisões**, com a tensão na vertical e o tempo na horizontal.
+- A Lívia liga um **gerador de funções** e mostra a **ponta de prova**: o gancho no sinal e o jacaré no terra (GND).
+- **Minijogo do osciloscópio**, em quatro rodadas, girando os botões com ◀ ▶:
+  1. **VOLTS/DIV**: deixar uma senoide de 6 V caber inteira na tela e ocupar mais da metade da altura (1 V/div).
+  2. **TEMPO/DIV**: mostrar de 2 a 4 ondas de 250 Hz (1 ms/div).
+  3. **TRIGGER**: o nível começa em 6 V, acima da onda, e a imagem corre; trazer o nível para dentro da
+     onda para ela parar.
+  4. **Golpe final**, com os três botões: o PWM do Arduino (`analogWrite(9, 64)`, 490 Hz, 25%), de 0 a 5 V,
+     com a linha do 0 V mais para baixo.
+- A Lívia ensina a tensão **pico a pico** (divisões × VOLTS/DIV), o **período** (divisões × TEMPO/DIV)
+  e a **frequência** (f = 1 ÷ T).
+- **Perguntas:** o que o eixo vertical mostra; onde vai o jacaré da ponta de prova; Vpp de uma onda de
+  4 divisões com 2 V/div; frequência de uma onda de 2 ms; qual botão ajustar quando a onda corre;
+  ciclo de trabalho do PWM na tela.
+- O chefão é vencido, a tela mostra um sorriso e a equipe parabeniza a jogadora antes do certificado.
 
 ## Pontos para a equipe revisar
 
@@ -102,5 +149,10 @@ As personagens que a jogadora pode escolher são os quadros **1, 2, 4, 5, 7 e 10
   As colunas da tabela no jogo têm o nome da função de cada faixa, com uma nota explicando.
 - **Oficina de Arduino:** só deu para aproveitar os slides 5 a 7 da apresentação do Canva. O resto foi
   escrito a partir dos cartazes e precisa ser comparado com a aula. Exportar os slides em PDF ajuda.
+- **Oficina de circuitos equivalentes:** não veio de uma oficina do LABe, foi escrita a partir dos
+  conceitos do livro. Conferir com o livro e decidir se ela vira uma oficina de verdade.
+- **Oficina do osciloscópio:** também não veio de uma oficina do LABe. Os valores (senoide de 6 V,
+  500 Hz e 250 Hz, PWM de 490 Hz) e o jeito de explicar o trigger podem ser ajustados ao osciloscópio
+  que o laboratório tem de verdade.
 - **Ordem das práticas do Arduino:** o pisca LED e o buzzer foram escolhidos a partir do cartaz
   ("Prática 2: ativando o buzzer"). Conferir se a oficina segue essa ordem.

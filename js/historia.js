@@ -20,7 +20,13 @@
  *   { tipo: 'resistor', quem, texto, alvo: 4700 }     minijogo de montar o resistor pelas cores
  *   { tipo: 'pwm', quem, texto, faixa: [40, 60], segundos: 4, sucesso }
  *                                                    minijogo do PWM: segurar = motor ligado; {cicloPWM} = % ligado
+ *   { tipo: 'osciloscopio', quem, texto, sinal, inicio, meta, controles, zero, sucesso }
+ *                                                    minijogo dos botões do osciloscópio (veja osciloscopio.js);
+ *                                                    meta: 'volts' | 'tempo' | 'trigger' | 'tudo'
  *   { tipo: 'desafio', id: 'primeiro-led' }           abre a bancada (veja desafios.js)
+ *
+ * Uma oficina com chefao: 'Nome' mostra a barra de vida do chefão no alto da cena:
+ * cada pergunta e cada rodada do osciloscópio acertada tira um pedaço dela.
  */
 
 // A equipe do LABe no jogo.
@@ -264,6 +270,100 @@ const OFICINAS = [
         ],
       },
       { ilustracao: null, quem: 'aline', texto: '{nome}, você montou, mediu e calculou. Isso é ser engenheira na prática!' },
+      { quem: 'alejandra', texto: 'Na próxima oficina o multímetro vai medir **resistência**, e você vai aprender um truque que os engenheiros usam o tempo todo: os **circuitos equivalentes**.' },
+    ],
+  },
+
+  {
+    id: 'eq1',
+    titulo: 'Circuitos equivalentes',
+    resumo: 'Meça resistência com o multímetro, troque vários resistores por um só e descubra o equivalente de Thévenin.',
+    passos: [
+      { cenario: 'laboratorio', quem: 'alejandra', texto: 'Oi, {nome}! Você já liga componentes em série e em paralelo e mede tudo com o multímetro. Hoje vamos aprender a **simplificar** circuitos.' },
+      { quem: 'alejandra', texto: 'É um truque que aparece logo no começo de **A Arte da Eletrônica**, um livro clássico que muita engenheira tem na estante. E hoje quem conduz a aula é a Julia, monitora do LABe!' },
+      { quem: 'julia', texto: 'Oi, {nome}! Eu sou a Julia. Vou te contar um segredo: um monte de resistores juntos pode ser trocado por **um resistor só**, sem o resto do circuito perceber a diferença.' },
+      { quem: 'julia', ilustracao: 'caixa-preta', texto: 'Imagina uma caixa fechada com dois fios para fora, A e B. Se tudo o que você mede entre A e B é igual ao de um resistor só, para o resto do circuito a caixa **é** esse resistor.' },
+      { quem: 'julia', texto: 'Esse resistor único se chama **resistor equivalente**, e o circuito simplificado é um **circuito equivalente**.' },
+      { quem: 'livia', ilustracao: 'ohmimetro', texto: 'Oi, {nome}! Para descobrir o que tem dentro da caixa, a gente usa outra função do multímetro: o **ohmímetro**. É só girar o seletor para **Ω**.' },
+      { quem: 'livia', texto: 'Ele faz passar uma correntinha usando a bateria dele mesmo e calcula a resistência. Por isso a regra de ouro: resistência se mede com o circuito **desligado**!' },
+      { quem: 'livia', texto: 'E se não existir caminho entre as pontas, o visor mostra **OL**: é o multímetro avisando que a resistência é grande demais para medir.' },
+      {
+        tipo: 'quiz', quem: 'livia', pergunta: 'Antes de medir a resistência de um circuito com o ohmímetro, você deve:',
+        opcoes: [
+          { texto: 'Desligar a fonte', certa: true, resposta: 'Isso! O ohmímetro usa a própria bateria. Com a fonte ligada, a leitura não vale e ainda pode estragar o aparelho.' },
+          { texto: 'Ligar a fonte para ter corrente', resposta: 'O ohmímetro já manda a corrente dele. A fonte ligada atrapalha a medida!' },
+          { texto: 'Deixar o seletor em V⎓', resposta: 'V⎓ mede tensão. Para resistência, o seletor vai no **Ω**.' },
+        ],
+      },
+      { quem: 'julia', ilustracao: 'serie-resistores', texto: 'Começando pelo mais fácil: em **série**, a corrente atravessa um resistor e depois o outro. As dificuldades se somam: **R = R1 + R2**.' },
+      {
+        tipo: 'quiz', quem: 'julia', pergunta: 'Qual é a resistência equivalente de **220 Ω e 330 Ω em série**?',
+        opcoes: [
+          { texto: '550 Ω', certa: true, resposta: '220 + 330 = 550 Ω. Em série é só somar!' },
+          { texto: '132 Ω', resposta: 'Esse seria o resultado em **paralelo**. Em série, as resistências se somam.' },
+          { texto: '110 Ω', resposta: 'Em série a resistência só aumenta: some as duas.' },
+          { texto: '330 Ω', resposta: 'Em série a corrente passa pelos dois, então os dois contam: 220 + 330.' },
+        ],
+      },
+      { quem: 'julia', ilustracao: null, texto: 'Agora na bancada! A gaveta não tem um resistor de 3,2 kΩ... mas dá para montar um com dois resistores em série.' },
+      { tipo: 'desafio', id: 'equivalente-serie' },
+      { quem: 'julia', ilustracao: 'paralelo-resistores', texto: 'Em **paralelo** é o contrário: a corrente ganha mais de um caminho e fica **mais fácil** passar. A resistência equivalente fica **menor que a menor** delas.' },
+      { quem: 'julia', texto: 'Para dois resistores, a conta é o **produto dividido pela soma**: R = (R1 × R2) ÷ (R1 + R2). E um atalho: dois resistores **iguais** em paralelo valem a **metade** de um.' },
+      {
+        tipo: 'quiz', quem: 'julia', pergunta: 'Dois resistores de **1 kΩ em paralelo** valem:',
+        opcoes: [
+          { texto: '500 Ω', certa: true, resposta: 'Isso! (1000 × 1000) ÷ (1000 + 1000) = 500 Ω. Dois iguais: metade.' },
+          { texto: '2 kΩ', resposta: 'Essa seria em **série**. Em paralelo a resistência diminui.' },
+          { texto: '1 kΩ', resposta: 'Com dois caminhos fica mais fácil passar, então a resistência diminui.' },
+        ],
+      },
+      { quem: 'julia', ilustracao: null, texto: 'Desafio: monte **500 Ω** usando dois resistores em paralelo.' },
+      { tipo: 'desafio', id: 'equivalente-paralelo' },
+      { quem: 'julia', texto: 'Um atalho que engenheiras usam o tempo todo: um resistor **grande** em paralelo com um **pequeno** vale quase o pequeno. A corrente vai quase toda pelo caminho mais fácil!' },
+      {
+        tipo: 'quiz', quem: 'julia', pergunta: 'Quanto vale, mais ou menos, **10 kΩ em paralelo com 100 Ω**?',
+        opcoes: [
+          { texto: 'Um pouquinho menos de 100 Ω', certa: true, resposta: 'Isso! A conta dá uns 99 Ω: o resistor grande quase não faz diferença.' },
+          { texto: 'Uns 10 kΩ', resposta: 'Em paralelo, o resultado é sempre **menor** que o menor dos dois.' },
+          { texto: 'Uns 5 kΩ', resposta: 'A metade só vale para dois resistores **iguais**. Aqui quem manda é o pequeno.' },
+        ],
+      },
+      { quem: 'alejandra', ilustracao: 'divisor', texto: 'Agora, um circuito famoso: dois resistores em série ligados na fonte formam um **divisor de tensão**.' },
+      { quem: 'alejandra', texto: 'A tensão da fonte se divide na proporção das resistências. No ponto do meio: **Vsaída = Vfonte × R2 ÷ (R1 + R2)**, onde R2 é o resistor de baixo, que vai para o −.' },
+      {
+        tipo: 'quiz', quem: 'alejandra', pergunta: 'Um divisor tem **R1 = 1 kΩ** em cima e **R2 = 4 kΩ** embaixo, ligado em **5 V**. Quanto dá no ponto do meio?',
+        opcoes: [
+          { texto: '4 V', certa: true, resposta: '5 × 4 ÷ (1 + 4) = 4 V. O resistor maior fica com a maior parte da tensão.' },
+          { texto: '1 V', resposta: 'Esse 1 V fica no resistor de **cima**. No meio, medindo até o −, sobra a tensão do R2.' },
+          { texto: '2,5 V', resposta: 'Metade da fonte só quando os dois resistores são **iguais**.' },
+        ],
+      },
+      { quem: 'julia', ilustracao: null, texto: 'Sua vez: monte um divisor que entregue **metade da fonte**, 2,5 V, e meça. Ah, e lembre de girar o seletor de volta para **V⎓**!' },
+      { tipo: 'desafio', id: 'divisor' },
+      { quem: 'julia', ilustracao: 'thevenin', texto: 'Agora o truque mais poderoso de hoje: o **equivalente de Thévenin**. Qualquer circuito de fontes e resistores, visto por dois pontos, se comporta como **uma fonte só em série com um resistor só**.' },
+      { quem: 'julia', texto: 'A **fonte de Thévenin** é a tensão entre os dois pontos sem nada ligado neles: no seu divisor, os **{divisorV} V** que você mediu.' },
+      { quem: 'julia', texto: 'O **resistor de Thévenin** é a resistência vista pelos dois pontos quando a gente troca a fonte por um fio (só na conta!). Aí os dois resistores do divisor ficam em **paralelo**: no seu, dá **{divisorRth}**.' },
+      { quem: 'alejandra', ilustracao: 'carga', texto: 'E isso explica um mistério: quando a gente liga uma **carga** na saída do divisor, a tensão cai. A carga e o resistor de Thévenin formam um novo divisor!' },
+      {
+        tipo: 'quiz', quem: 'alejandra', pergunta: 'Um circuito tem equivalente de Thévenin de **2,5 V** e **500 Ω**. Ligando uma carga de **500 Ω**, quanto fica na carga?',
+        opcoes: [
+          { texto: '1,25 V', certa: true, resposta: 'Isso! Carga e resistor de Thévenin iguais: a tensão se divide no meio.' },
+          { texto: '2,5 V', resposta: 'Essa é a tensão sem carga. Com a carga, parte da tensão fica no resistor de Thévenin.' },
+          { texto: '5 V', resposta: 'A fonte de Thévenin tem só 2,5 V, e ainda divide com o resistor de Thévenin.' },
+        ],
+      },
+      { quem: 'julia', ilustracao: null, texto: 'Bora testar na bancada? Sem desmontar o seu divisor, ligue uma carga na saída sem deixar a tensão cair muito.' },
+      { tipo: 'desafio', id: 'carga' },
+      { quem: 'julia', texto: 'A regra prática dos engenheiros: a carga deve ser pelo menos **10 vezes maior** que o resistor de Thévenin. Assim a tensão cai menos de 10%.' },
+      {
+        tipo: 'quiz', quem: 'julia', pergunta: 'O motor da próxima oficina se comporta como uns **25 Ω**. Dá para alimentar ele com o seu divisor de tensão?',
+        opcoes: [
+          { texto: 'Não: a tensão no motor despencaria', certa: true, resposta: 'Isso! 25 Ω é bem menor que o resistor de Thévenin do divisor: quase toda a tensão ficaria nele, e o motor nem sairia do lugar.' },
+          { texto: 'Sim, ele recebe os 2,5 V certinho', resposta: 'Os 2,5 V são sem carga! Com uma carga tão pequena, a tensão cai muito. Lembre da regra das 10 vezes.' },
+          { texto: 'Sim, se o motor girar devagar', resposta: 'O problema é a resistência baixa do motor: ela derruba a tensão do divisor, e ele nem sai do lugar.' },
+        ],
+      },
+      { quem: 'julia', texto: 'Arrasou, {nome}! Agora você sabe trocar um pedaço do circuito por um equivalente mais simples: em série, em paralelo e até com a fonte junto.' },
       { quem: 'alejandra', texto: 'Você completou as oficinas de eletrônica básica do LABe! Agora você está pronta para colocar as coisas em movimento: a próxima oficina é de **motores elétricos**. E lembre: o laboratório também é lugar de mulher!' },
     ],
   },
@@ -398,7 +498,114 @@ const OFICINAS = [
       { quem: 'julia-robotica', ilustracao: null, texto: 'Sua vez: ligue o buzzer no pino 8 e faça ele apitar. Cuidado com os ouvidos de quem está do seu lado!' },
       { tipo: 'desafio', id: 'buzzer' },
       { quem: 'alejandra', texto: 'Parabéns, {nome}! Você já sabe montar um circuito e programar o Arduino para controlá-lo.' },
-      { quem: 'alejandra', texto: 'Na próxima oficina vamos usar sensores, como o sensor ultrassônico, que mede distâncias. Até lá!' },
+      { quem: 'alejandra', texto: 'Nas próximas oficinas do LABe a gente vai usar sensores, como o sensor ultrassônico, que mede distâncias.' },
+      { quem: 'alejandra', texto: 'Mas, antes, ainda falta um desafio: o **chefão final** do laboratório está te esperando!' },
+    ],
+  },
+
+  {
+    id: 'osc1',
+    trilha: 'Chefão final',
+    chefao: 'Osciloscópio',
+    titulo: 'O osciloscópio',
+    resumo: 'O chefão final do laboratório! Aprenda a usar o osciloscópio, o aparelho que desenha a tensão ao longo do tempo, um botão de cada vez.',
+    passos: [
+      { cenario: 'laboratorio', quem: 'alejandra', texto: '{nome}, você chegou à última oficina! Você já acendeu LEDs, mediu com o multímetro, fez motores girarem e programou o Arduino.' },
+      { quem: 'alejandra', texto: 'Mas todo jogo tem um **chefão final**. E o do laboratório está ali no fundo, em cima da bancada...' },
+      { quem: 'narrador', ilustracao: 'chefao', texto: 'Um aparelho cheio de botões, com uma telinha verde, parece te encarar. É o **osciloscópio**!' },
+      { quem: 'voce', texto: 'Quanto botão! Por onde eu começo?' },
+      { quem: 'marta', texto: 'Calma! Ele parece assustador, mas cada botão faz uma coisa só. A gente vai domar ele **um botão de cada vez**.' },
+      { quem: 'marta', texto: 'Cada pergunta e cada ajuste que você acertar tira um pedaço da **vida do chefão**. Olha a barra lá em cima!' },
+      { quem: 'marta', ilustracao: 'osciloscopio', texto: 'O multímetro mostra um número só. O osciloscópio **desenha a tensão ao longo do tempo**: é um gráfico ao vivo do que acontece no circuito.' },
+      { quem: 'marta', ilustracao: 'tela-osc', texto: 'A tela tem uma grade. Na **vertical** fica a **tensão** e na **horizontal** fica o **tempo**. Cada quadradinho da grade se chama **divisão**.' },
+      {
+        tipo: 'quiz', quem: 'marta', ilustracao: null, pergunta: 'Na tela do osciloscópio, o eixo **vertical** mostra:',
+        opcoes: [
+          { texto: 'A tensão', certa: true, resposta: 'Isso! Quanto mais alto o desenho, maior a tensão naquele instante.' },
+          { texto: 'O tempo', resposta: 'O tempo corre na horizontal, da esquerda para a direita.' },
+          { texto: 'A resistência', resposta: 'O osciloscópio mostra tensão. A resistência a gente mede com o ohmímetro!' },
+        ],
+      },
+      { quem: 'livia', ilustracao: 'ponta-de-prova', texto: 'Para ter o que olhar, liguei um **gerador de funções**. Ele cria sinais que sobem e descem sem parar, como a **onda senoidal**.' },
+      { quem: 'livia', texto: 'O sinal entra no osciloscópio pela **ponta de prova**. O **gancho** vai no ponto que você quer medir e o **jacaré** vai no **terra** (GND), como a ponta preta do multímetro.' },
+      {
+        tipo: 'quiz', quem: 'livia', ilustracao: null, pergunta: 'Onde vai o **jacaré** da ponta de prova?',
+        opcoes: [
+          { texto: 'No terra (GND)', certa: true, resposta: 'Isso! O osciloscópio mede a tensão do gancho em relação ao terra, o 0 V.' },
+          { texto: 'No ponto que eu quero medir', resposta: 'Nesse ponto vai o gancho. O jacaré fica no terra, a referência de 0 V.' },
+          { texto: 'Em lugar nenhum', resposta: 'Sem o jacaré no terra, falta a referência de 0 V e a medida sai cheia de ruído.' },
+        ],
+      },
+      { quem: 'marta', texto: 'Primeiro botão: **VOLTS/DIV**. Ele diz quantos volts vale cada divisão na vertical. Com um valor grande, a onda fica baixinha. Com um valor pequeno, ela cresce e pode até sair da tela.' },
+      {
+        tipo: 'osciloscopio', quem: 'marta', meta: 'volts', controles: ['volts'],
+        sinal: { forma: 'seno', vpp: 6, f: 500 }, inicio: { volts: 10, tempo: 0.5, trigger: 0 },
+        texto: 'Gire o **VOLTS/DIV** até a onda caber inteira na tela e ocupar **mais da metade** da altura.',
+        sucesso: 'Com **1 V/div**, a onda ocupa **6 divisões** de cima a baixo: 6 × 1 V = **6 V**.',
+      },
+      { quem: 'livia', texto: 'Essa medida, do ponto mais alto ao mais baixo da onda, se chama tensão **pico a pico** (Vpp). É só contar as divisões e multiplicar pelo VOLTS/DIV.' },
+      {
+        tipo: 'quiz', quem: 'livia', ilustracao: 'pico-a-pico', pergunta: 'Com o VOLTS/DIV em **2 V**, esta onda ocupa **4 divisões** de pico a pico. Qual é a tensão pico a pico?',
+        opcoes: [
+          { texto: '8 V', certa: true, resposta: '4 divisões × 2 V = **8 V** de pico a pico.' },
+          { texto: '4 V', resposta: 'Cada divisão vale 2 V, não 1 V. São 4 divisões de 2 V cada.' },
+          { texto: '2 V', resposta: 'Esse é o valor de uma divisão só. A onda ocupa 4 delas!' },
+        ],
+      },
+      { quem: 'marta', ilustracao: null, texto: 'Segundo botão: **TEMPO/DIV**. Ele diz quanto tempo vale cada divisão na horizontal. É como dar **zoom** no tempo.' },
+      {
+        tipo: 'osciloscopio', quem: 'marta', meta: 'tempo', controles: ['tempo'],
+        sinal: { forma: 'seno', vpp: 6, f: 250 }, inicio: { volts: 1, tempo: 10, trigger: 0 },
+        texto: 'A Lívia mudou a frequência do gerador e as ondas ficaram espremidas. Gire o **TEMPO/DIV** até aparecerem de **2 a 4 ondas** completas na tela.',
+        sucesso: 'Com **1 ms/div**, cada onda ocupa **4 divisões**: ela leva 4 × 1 ms = **4 ms** para se repetir.',
+      },
+      { quem: 'livia', ilustracao: 'periodo', texto: 'O tempo de uma onda completa é o **período** (T). E quantas ondas acontecem em um segundo é a **frequência** (f), medida em **hertz** (Hz).' },
+      { quem: 'livia', texto: 'Uma é o inverso da outra: **f = 1 ÷ T**. Com T = 4 ms, que é 0,004 s, a frequência é 1 ÷ 0,004 = **250 Hz**: 250 ondas por segundo!' },
+      {
+        tipo: 'quiz', quem: 'livia', ilustracao: null, pergunta: 'Uma onda tem período de **2 ms**. Qual é a frequência dela?',
+        opcoes: [
+          { texto: '500 Hz', certa: true, resposta: '1 ÷ 0,002 s = **500 Hz**. Período menor, frequência maior!' },
+          { texto: '2 Hz', resposta: 'Cuidado com a unidade: 2 ms são 0,002 s. Quanto dá 1 ÷ 0,002?' },
+          { texto: '200 Hz', resposta: 'Quase! 1 ÷ 0,002 dá 500, não 200.' },
+        ],
+      },
+      { quem: 'marta', texto: 'Agora o botão mais traiçoeiro: o **TRIGGER**, ou gatilho. Sem ele, cada desenho da onda começa num ponto diferente, e a imagem fica **correndo** na tela.' },
+      { quem: 'marta', ilustracao: 'trigger', texto: 'O trigger faz o desenho começar sempre no mesmo ponto: quando a onda **sobe** e passa por um **nível** de tensão que você escolhe. Se o nível fica fora da onda, ela nunca passa por ele.' },
+      {
+        tipo: 'osciloscopio', quem: 'marta', meta: 'trigger', controles: ['trigger'],
+        sinal: { forma: 'seno', vpp: 6, f: 250 }, inicio: { volts: 1, tempo: 1, trigger: 6 },
+        texto: 'O chefão contra-ataca: o nível do trigger está em **6 V**, acima da onda, e a imagem não para. Ajuste o **TRIGGER** para dentro da onda.',
+        sucesso: 'A onda parou! Agora todo desenho começa no mesmo ponto, e dá para medir com calma.',
+      },
+      {
+        tipo: 'quiz', quem: 'marta', ilustracao: null, pergunta: 'A onda está **correndo** na tela e não para. Qual botão você ajusta?',
+        opcoes: [
+          { texto: 'O TRIGGER', certa: true, resposta: 'Isso! Com o nível do trigger dentro da onda, a imagem fica parada.' },
+          { texto: 'O VOLTS/DIV', resposta: 'Ele muda a altura da onda, mas ela continua correndo.' },
+          { texto: 'O TEMPO/DIV', resposta: 'Ele muda quantas ondas aparecem, mas a imagem continua correndo.' },
+        ],
+      },
+      { quem: 'alejandra', texto: 'O chefão está quase vencido! Para o golpe final, a Julia trouxe um velho conhecido...' },
+      { quem: 'julia-robotica', texto: 'O **Arduino**! Ele está rodando **analogWrite(9, 64)**, um **PWM** no pino 9. Lembra da oficina de motores? Agora você vai **ver** o PWM de verdade.' },
+      { quem: 'julia-robotica', texto: 'Esse sinal só vai de 0 a 5 V, então deixei a linha do 0 V mais para baixo: é a setinha amarela na esquerda da tela. E agora os **três botões** são seus!' },
+      {
+        tipo: 'osciloscopio', quem: 'julia-robotica', meta: 'tudo', controles: ['volts', 'tempo', 'trigger'], zero: -3,
+        sinal: { forma: 'quadrada', alto: 5, baixo: 0, f: 490, ciclo: 0.25 }, inicio: { volts: 5, tempo: 5, trigger: -3 },
+        texto: 'Golpe final! Deixe a onda **grande** e inteira na tela, com **2 a 4 ondas** e a imagem **parada**.',
+        sucesso: 'Golpe certeiro! Com **1 V/div** e **0,5 ms/div** dá para ver o PWM: **5 V** por um tempinho e **0 V** no resto. Só falta mais um golpe!',
+      },
+      {
+        tipo: 'quiz', quem: 'julia-robotica', pergunta: 'Na tela, a onda fica em **5 V** durante **1 divisão** e em **0 V** durante **3 divisões**. Qual é o ciclo de trabalho desse PWM?',
+        opcoes: [
+          { texto: '25%', certa: true, resposta: 'Isso! Ligado 1 de 4 divisões = **25%**. E 64 é um quarto de 255, o máximo do analogWrite!' },
+          { texto: '75%', resposta: 'Esse é o tempo desligado. O ciclo de trabalho é a parte do tempo **ligado**: 1 de 4 divisões.' },
+          { texto: '33%', resposta: 'O período inteiro tem 1 + 3 = 4 divisões. Ligado 1 de 4 é quanto?' },
+        ],
+      },
+      { quem: 'narrador', ilustracao: 'chefao-vencido', texto: 'A telinha verde pisca... e mostra uma onda bem comportada. O **osciloscópio** foi vencido!' },
+      { quem: 'marta', texto: 'E agora ele é seu aliado! Com o osciloscópio você enxerga sinais rápidos demais para o multímetro, como o PWM, o som de um buzzer e as mensagens que o Arduino manda.' },
+      { quem: 'alejandra', ilustracao: null, grupo: ['livia', 'marta', 'julia-robotica', 'alejandra'], texto: 'Parabéns, {nome}! Você completou **todas as oficinas** do jogo LABe e venceu o chefão final!' },
+      { quem: 'alejandra', texto: 'Seu certificado está te esperando. E lembre: o laboratório também é lugar de mulher. Até a próxima oficina!' },
     ],
   },
 ];

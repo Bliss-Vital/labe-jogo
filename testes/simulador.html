@@ -8,6 +8,7 @@
 <script src="../js/desafios.js"></script>
 <script src="../js/arduino.js"></script>
 <script src="../js/pwm.js"></script>
+<script src="../js/osciloscopio.js"></script>
 <script src="../js/historia.js"></script>
 <script>
   // Nos testes, o nome do furo é o próprio nó; "S1#a" e "S1#b" são dois furos da mesma coluna.
@@ -21,11 +22,18 @@
   const ctx = (lista, sondas = { v: null, p: null }) => {
     const res = sim(lista);
     return {
-      pecas: lista, sondas, ligada: true, res,
+      pecas: lista, sondas, ligada: true, res, modo: 'V',
       leitura: sondas.v && sondas.p ? res.tensao(sondas.v) - res.tensao(sondas.p) : null,
       mesmaColuna: p => noBase(p.a) === noBase(p.b), no: id => res.no(id), nomePeca: () => 'A peça',
     };
   };
+  // multímetro no Ω, com a fonte desligada
+  const ohms = (lista, a, b) => Simulador.resistencia(lista, noBase, a, b);
+  const ctxOhm = (lista, sondas, modo = 'Ω') => ({
+    pecas: lista, sondas, ligada: false, res: null, modo,
+    leitura: modo === 'Ω' ? ohms(lista, sondas.v, sondas.p) : 0,
+    mesmaColuna: p => noBase(p.a) === noBase(p.b), no: noBase, nomePeca: () => 'A peça',
+  });
   const mA = i => (i * 1000).toFixed(2) + ' mA';
   const resultados = [];
   function teste(nome, fn) {
@@ -200,6 +208,68 @@
     afirmar(!m.girando, 'girou');
   });
 
+  // ---------------------------------------------------------------- circuitos equivalentes
+  teste('ohmímetro: série soma, paralelo dá a metade, fio liga e sem caminho é OL', () => {
+    const serie = ohms(pecas([R('S1', 'S2', 1000), R('S2', 'S3', 2200)]), 'S1', 'S3');
+    const paralelo = ohms(pecas([R('S1', 'S2', 1000), R('S1#b', 'S2#b', 1000)]), 'S1', 'S2');
+    const comFio = ohms(pecas([R('S1', 'S2', 1000), F('S2', 'S5'), R('S5', 'S6', 220)]), 'S1', 'S6');
+    afirmar(Math.abs(serie - 3200) < 0.1 && Math.abs(paralelo - 500) < 0.1 && Math.abs(comFio - 1220) < 0.1, `${serie} ${paralelo} ${comFio}`);
+    afirmar(ohms(pecas([R('S1', 'S2', 1000)]), 'S1', 'S5') === Infinity, 'sem caminho');
+    afirmar(ohms(pecas([R('S1', 'S2', 1000)]), 'S1', 'S1#b') === 0, 'mesmo ponto');
+    afirmar(Math.abs(ohms(pecas([R('S1', 'S2', 10000), R('S1#b', 'S2#b', 100)]), 'S1', 'S2') - 99.01) < 0.01, 'grande com pequeno');
+    return `${serie.toFixed(0)} Ω, ${paralelo.toFixed(0)} Ω`;
+  });
+  teste('desafio "série": 1 kΩ + 2,2 kΩ no Ω vale; no V⎓ ou com um resistor só, não', () => {
+    const d = DESAFIOS['equivalente-serie'];
+    const p = pecas([R('S1', 'S2', 1000), R('S2', 'S3', 2200)]);
+    afirmar(d.verificar(ctxOhm(p, { v: 'S1', p: 'S3' })), 'não concluiu');
+    const noV = ctxOhm(p, { v: 'S1', p: 'S3' }, 'V');
+    afirmar(!d.verificar(noV) && /Ω/.test(dicaAutomatica(noV, d).texto), 'modo V');
+    afirmar(!d.verificar(ctxOhm(p, { v: 'S2', p: 'S3' })), 'um resistor só');
+    afirmar(/OL/.test(d.dicaAoVivo(ctxOhm(p, { v: 'S1', p: 'S7' })).texto), 'sem dica de OL');
+  });
+  teste('desafio "série": com a fonte ligada pede para desligar', () => {
+    const c = ctx(pecas([R('S1', 'S2', 1000), R('S2', 'S3', 2200)]), { v: 'S1', p: 'S3' });
+    c.modo = 'Ω';
+    c.leitura = null;
+    const d = dicaAutomatica(c, DESAFIOS['equivalente-serie']);
+    afirmar(d && /Desligue a fonte/.test(d.texto), d ? d.texto : 'sem dica');
+  });
+  teste('desafio "paralelo": dois de 1 kΩ lado a lado valem; em série não', () => {
+    const d = DESAFIOS['equivalente-paralelo'];
+    const par = ctxOhm(pecas([R('S1', 'S2', 1000), R('S1#b', 'S2#b', 1000)]), { v: 'S1', p: 'S2' });
+    const ser = ctxOhm(pecas([R('S1', 'S2', 1000), R('S2', 'S3', 1000)]), { v: 'S1', p: 'S3' });
+    afirmar(d.verificar(par) && !d.verificar(ser), 'verificar errado');
+    afirmar(/menor/.test(d.dicaAoVivo(ser).texto), 'sem dica de série');
+    afirmar(!d.verificar(ctxOhm(pecas([R('S1', 'S2', 470)]), { v: 'S1', p: 'S2' })), '470 sozinho valeu');
+  });
+  teste('desafio "divisor": 1 kΩ + 1 kΩ dá 2,5 V no meio e Rth de 500 Ω', () => {
+    const d = DESAFIOS.divisor;
+    const p = pecas([R('TP', 'S1', 1000), R('S1', 'TN', 1000)]);
+    const c = ctx(p, { v: 'S1', p: 'TN' });
+    afirmar(d.verificar(c), 'leitura ' + c.leitura);
+    const vars = d.aoConcluir(c);
+    afirmar(vars.divisorRth === '500 Ω' && vars.divisorV === '2,50', JSON.stringify(vars));
+    afirmar(!d.verificar(ctx(p, { v: 'TP', p: 'S1' })), 'preta fora do −');
+    const desigual = ctx(pecas([R('TP', 'S1', 220), R('S1', 'TN', 1000)]), { v: 'S1', p: 'TN' });
+    afirmar(!d.verificar(desigual) && /mesmo valor/.test(d.dicaAoVivo(desigual).texto), 'divisor desigual');
+    const noOhm = Object.assign(ctx(p, { v: 'S1', p: 'TN' }), { modo: 'Ω' });
+    afirmar(!d.verificar(noOhm) && /V⎓/.test(d.dicaAoVivo(noOhm).texto), 'seletor em Ω');
+    return JSON.stringify(vars);
+  });
+  teste('desafio "carga": 10 kΩ quase não muda a saída; 1 kΩ derruba', () => {
+    const d = DESAFIOS.carga;
+    const divisor = [R('TP', 'S1', 1000), R('S1', 'TN', 1000)];
+    const grande = ctx(pecas([...divisor, R('S1#b', 'TN#b', 10000)]), { v: 'S1', p: 'TN' });
+    const pequena = ctx(pecas([...divisor, R('S1#b', 'TN#b', 1000)]), { v: 'S1', p: 'TN' });
+    afirmar(d.verificar(grande), 'grande: ' + grande.leitura);
+    afirmar(!d.verificar(pequena) && /maior/.test(d.dicaAoVivo(pequena).texto), 'pequena: ' + pequena.leitura);
+    afirmar(!d.verificar(ctx(pecas(divisor), { v: 'S1', p: 'TN' })), 'sem carga valeu');
+    const vars = d.aoConcluir(grande);
+    afirmar(vars.cargaR === '10 kΩ', JSON.stringify(vars));
+    return `10 kΩ: ${grande.leitura.toFixed(2)} V, 1 kΩ: ${pequena.leitura.toFixed(2)} V`;
+  });
+
   // ---------------------------------------------------------------- roteiro
   teste('roteiro: falas, desafios e ilustrações existem', () => {
     const erros = [];
@@ -208,10 +278,94 @@
       for (const g of p.grupo || []) if (!PERSONAGENS[g]) erros.push(`${o.id}: grupo '${g}'`);
       if (p.tipo === 'desafio' && !DESAFIOS[p.id]) erros.push(`${o.id}: desafio '${p.id}'`);
       if (p.ilustracao && !Arte.ilustracao(p.ilustracao)) erros.push(`${o.id}: ilustração '${p.ilustracao}'`);
+      if (p.tipo === 'osciloscopio' && !Osciloscopio.METAS[p.meta]) erros.push(`${o.id}: meta do osciloscópio '${p.meta}'`);
     }
     for (const [id, d] of Object.entries(DESAFIOS)) if (!PERSONAGENS[d.monitora]) erros.push(`desafio ${id}: monitora '${d.monitora}'`);
     afirmar(!erros.length, erros.join('; '));
     return `${OFICINAS.length} oficinas`;
+  });
+
+  // ---------------------------------------------------------------- chefão final: o osciloscópio
+  const NIVEIS = Array.from({ length: 17 }, (_, i) => i - 8);
+  teste('osciloscópio: cada rodada do roteiro começa errada e tem um só ajuste certo de VOLTS/DIV e TEMPO/DIV', () => {
+    const rodadas = OFICINAS.flatMap(o => o.passos).filter(p => p.tipo === 'osciloscopio');
+    afirmar(rodadas.length === 4, `${rodadas.length} rodadas`);
+    const resumo = [];
+    for (const p of rodadas) {
+      const ini = Object.assign({ volts: 1, tempo: 1, trigger: 0 }, p.inicio);
+      const meta = Osciloscopio.METAS[p.meta];
+      afirmar(!meta(Osciloscopio.avaliar(p.sinal, ini, p.zero)), `${p.meta}: já começa resolvida`);
+      const opcoes = c => (p.controles.includes(c) ? (c === 'volts' ? Osciloscopio.VOLTS : c === 'tempo' ? Osciloscopio.TEMPOS : NIVEIS) : [ini[c]]);
+      const certos = { volts: new Set(), tempo: new Set(), trigger: new Set() };
+      for (const volts of opcoes('volts')) for (const tempo of opcoes('tempo')) for (const trigger of opcoes('trigger')) {
+        if (!meta(Osciloscopio.avaliar(p.sinal, { volts, tempo, trigger }, p.zero))) continue;
+        certos.volts.add(volts); certos.tempo.add(tempo); certos.trigger.add(trigger);
+      }
+      afirmar(certos.volts.size === 1 && certos.tempo.size === 1 && certos.trigger.size >= 1, `${p.meta}: ${JSON.stringify({ volts: [...certos.volts], tempo: [...certos.tempo] })}`);
+      const niveis = [...certos.trigger];
+      resumo.push(`${p.meta}: ${[...certos.volts]} V, ${[...certos.tempo]} ms, trigger ${Math.min(...niveis)} a ${Math.max(...niveis)} V`);
+    }
+    return resumo.join('; ');
+  });
+  teste('osciloscópio: Vpp, ondas na tela e trigger', () => {
+    const seno = { forma: 'seno', vpp: 6, f: 250 }, pwm = { forma: 'quadrada', alto: 5, baixo: 0, f: 490, ciclo: 0.25 };
+    const s = Osciloscopio.avaliar(seno, { volts: 1, tempo: 1, trigger: 0 });
+    afirmar(s.altura === 6 && s.cabe && s.grande && s.ondas === 2.5 && s.disparou, JSON.stringify(s));
+    afirmar(!Osciloscopio.avaliar(seno, { volts: 0.5, tempo: 1, trigger: 0 }).cabe, '12 divisões couberam');
+    afirmar(!Osciloscopio.avaliar(seno, { volts: 1, tempo: 1, trigger: 3 }).disparou, 'disparou no pico');
+    afirmar(!Osciloscopio.avaliar(pwm, { volts: 1, tempo: 0.5, trigger: 1 }, 0).cabe, 'PWM coube sem baixar o 0 V');
+    afirmar(Osciloscopio.avaliar(pwm, { volts: 1, tempo: 0.5, trigger: 1 }, -3).cabe, 'PWM não coube com o 0 V embaixo');
+  });
+
+  // roda o minijogo com quadros falsos e devolve a imagem da tela depois de n quadros
+  function telaOsc(painel, n, passo = 37) {
+    const rafOriginal = window.requestAnimationFrame;
+    let proximo = null;
+    window.requestAnimationFrame = cb => { proximo = cb; return 1; };
+    return {
+      iniciar(opcoes) { Osciloscopio.iniciar(painel, opcoes); },
+      quadros() {
+        const t0 = performance.now(), ctx = painel.querySelector('canvas').getContext('2d'), imagens = [];
+        for (let k = 0; k < n && proximo; k++) {
+          const cb = proximo; proximo = null;
+          cb(t0 + k * passo);
+          imagens.push(ctx.getImageData(0, 0, 200, 160).data);
+        }
+        return imagens;
+      },
+      fim() { Osciloscopio.parar(); window.requestAnimationFrame = rafOriginal; },
+    };
+  }
+  const iguais = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+  teste('osciloscópio: com trigger a imagem fica parada e passa pelo nível no meio da tela; sem trigger, ela corre', () => {
+    const painel = document.createElement('div');
+    const sinal = { forma: 'seno', vpp: 6, f: 250 };
+    const t = telaOsc(painel, 14);
+    t.iniciar({ sinal, inicio: { volts: 1, tempo: 1, trigger: 2 }, meta: 'trigger', controles: ['trigger'] });
+    const parada = t.quadros();
+    t.fim();
+    afirmar(iguais(parada[12], parada[13]), 'com trigger a imagem mudou');
+    // nível de 2 V com 1 V/div: 2 divisões (40 pixels) acima do meio, na coluna do meio
+    const i = (40 * 200 + 100) * 4;
+    afirmar(parada[13][i + 1] > 200, `pixel do disparo: ${[...parada[13].slice(i, i + 3)]}`);
+    const u = telaOsc(painel, 14);
+    u.iniciar({ sinal, inicio: { volts: 1, tempo: 1, trigger: 6 }, meta: 'trigger', controles: ['trigger'] });
+    const corre = u.quadros();
+    u.fim();
+    afirmar(!iguais(corre[12], corre[13]), 'sem trigger a imagem ficou parada');
+  });
+  teste('osciloscópio: só o botão da rodada funciona, vence uma vez e trava', () => {
+    const painel = document.createElement('div');
+    let vitorias = 0;
+    const t = telaOsc(painel, 1);
+    t.iniciar({ sinal: { forma: 'seno', vpp: 6, f: 500 }, inicio: { volts: 10, tempo: 0.5, trigger: 0 }, meta: 'volts', controles: ['volts'], aoVencer: () => vitorias++ });
+    const botao = (c, d) => painel.querySelector(`button[data-c="${c}"][data-d="${d}"]`);
+    afirmar(botao('tempo', 1).disabled && botao('trigger', 1).disabled, 'botões travados liberados');
+    for (let k = 0; k < 5; k++) if (!botao('volts', -1).disabled) botao('volts', -1).click();
+    const valor = painel.querySelector('[data-valor="volts"]').textContent;
+    t.fim();
+    afirmar(vitorias === 1 && valor === '1 V', `${vitorias} vitórias, ${valor}`);
+    afirmar([...painel.querySelectorAll('.osc-ctrl button')].every(b => b.disabled), 'botões continuam liberados');
   });
 
   // ---------------------------------------------------------------- minijogo do PWM

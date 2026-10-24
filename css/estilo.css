@@ -141,6 +141,8 @@ h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .0
 .cartao-oficina:disabled p { color: #937da8; }
 .cartao-oficina .status { font-weight: 700; font-size: .95rem; color: var(--roxo); }
 .cartao-oficina.feita .status { color: var(--ok); }
+.cartao-oficina.cartao-chefao:not(:disabled) { background: #fff0d2; border-color: #8f1f2a; box-shadow: inset 0 0 0 var(--px) #f6c38a, var(--sombra); }
+.cartao-oficina.cartao-chefao:not(:disabled) .num { color: #c0392b; }
 .estrelas { color: #f2b21b; letter-spacing: 2px; font-size: 1.1rem; }
 .estrelas .apagada { color: #d8cbe3; }
 .mapa-rodape { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
@@ -225,6 +227,61 @@ h1, h2, h3 { font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .0
 .pwm-botao { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .pwm-botao.apertado { background: var(--ok); transform: translateY(2px); box-shadow: inset 4px 4px 0 rgba(0, 0, 0, .3); }
 .pwm-legenda, .pwm-ajuda { margin: 0; font-size: .8rem; color: var(--tinta-suave); }
+
+/* chefão final: barra de vida no alto da cena */
+.chefao {
+  position: absolute; z-index: 3; top: 10px; left: 50%; transform: translateX(-50%); width: min(420px, calc(100% - 24px));
+  background: var(--tinta); color: var(--creme); border: 3px solid #0a0410; padding: 6px 10px 8px; box-shadow: var(--sombra);
+}
+.chefao.tremer { animation: tremer-chefao .3s steps(4); }
+@keyframes tremer-chefao { 25% { transform: translateX(calc(-50% - 6px)); } 75% { transform: translateX(calc(-50% + 6px)); } }
+.chefao-nome { display: block; margin-bottom: 4px; font-weight: 700; font-size: .9rem; letter-spacing: .06em; text-transform: uppercase; color: #ffd23f; }
+.chefao.vencido .chefao-nome { color: #8de0a8; }
+.chefao-vida { display: flex; gap: 3px; height: 14px; }
+.chefao-vida i { flex: 1; background: #4a2d6e; }
+.chefao-vida i.cheio { background: #e5484d; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .25); }
+.chefao-vida i.perdeu { animation: perder-vida .6s steps(3); }
+@keyframes perder-vida { 0%, 66% { background: #fff; } }
+.cena-palco.com-chefao .cena-ilustracao { top: calc(50% + 30px); max-height: calc(100% - 84px); }
+
+/* minijogo: os botões do osciloscópio */
+.osc { display: flex; flex-direction: column; gap: 8px; }
+.osc-aparelho {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start;
+  background: #d9d2e2; border: 3px solid var(--tinta); padding: 10px; box-shadow: inset -4px -4px 0 rgba(0, 0, 0, .12);
+}
+.osc-esq { display: flex; flex-direction: column; gap: 6px; align-items: center; min-width: 0; }
+.osc-tela {
+  display: block; width: min(100%, calc((100cqh - 200px) * 1.25)); min-width: 200px; height: auto;
+  border: 5px solid #2b2b31; image-rendering: pixelated; image-rendering: crisp-edges;
+}
+.osc-status { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: .8rem; font-weight: 700; color: var(--tinta); }
+.osc-lampada { width: 12px; height: 12px; flex: none; background: #7a2a32; border: 2px solid var(--tinta); animation: piscar-seta .5s steps(1) infinite; }
+.osc-lampada.aceso { background: #2ee66b; animation: none; }
+.osc-sinal { color: var(--tinta-suave); font-weight: 600; }
+.osc-controles { display: grid; gap: 10px; align-content: start; }
+.osc-ctrl {
+  display: grid; grid-template-columns: 34px minmax(5.2em, auto) 34px; gap: 4px 6px; align-items: center;
+  padding: 6px; border: 3px solid transparent;
+}
+.osc-ctrl.foco { border-color: #f2b21b; background: #fff6d6; }
+.osc-rotulo { grid-column: 1 / -1; font-size: .8rem; font-weight: 700; letter-spacing: .05em; color: var(--tinta); text-align: center; }
+.osc-ctrl button { width: 34px; height: 34px; border: 3px solid var(--tinta); background: #5a5a64; color: #fff; font-size: .9rem; }
+.osc-ctrl button:not(:disabled):hover { background: var(--roxo); }
+.osc-ctrl button:disabled { opacity: .35; }
+.osc-valor {
+  text-align: center; padding: 4px 6px; background: #cfe0c8; color: #1f2a1c; border: 3px solid #2b2b31;
+  font-family: var(--f-mono); font-weight: 700; font-size: .95rem; white-space: nowrap;
+}
+.osc-dica { margin: 0; min-height: 1.4em; font-weight: 600; color: var(--tinta); }
+.osc-dica.certo { color: var(--ok); }
+@container (max-width: 640px) {
+  /* no celular, os botões ficam embaixo da tela, um por linha: nome, ◀, valor, ▶ */
+  .osc-aparelho { grid-template-columns: minmax(0, 1fr); padding: 8px; }
+  .osc-controles { gap: 4px; }
+  .osc-ctrl { grid-template-columns: minmax(0, 1fr) 34px minmax(4.6em, auto) 34px; padding: 3px 6px; }
+  .osc-rotulo { grid-column: auto; text-align: left; }
+}
 
 /* minijogo: monte o resistor */
 .monta-resistor { display: flex; flex-direction: column; gap: 12px; align-items: center; }

@@ -36,6 +36,7 @@ const Som = (() => {
       else if (nome === 'sucesso') [523, 659, 784, 1047].forEach((f, i) => nota(f, t + i * 0.09, 0.2));
       else if (nome === 'estouro') { ruido(t, 0.3); nota(110, t, 0.3, 'sawtooth', 0.06); }
       else if (nome === 'clique') nota(1200, t, 0.03, 'square', 0.02);
+      else if (nome === 'golpe') { nota(880, t, 0.05); nota(220, t + 0.05, 0.18, 'sawtooth', 0.06); }
       else if (nome === 'letra') nota(520 + Math.random() * 80, t, 0.025, 'square', 0.012);
     } catch (e) { /* sem áudio, sem problema */ }
   }
@@ -207,11 +208,13 @@ const Som = (() => {
   $('#btn-voltar-abertura').addEventListener('click', abrirApresentacao);
 
   // ---------------------------------------------------------------- mapa das oficinas
-  const liberada = i => MODO_LIVRE || estado.livre || i === 0 || !!estado.concluidas[OFICINAS[i - 1].id];
+  // uma oficina já concluída continua liberada, mesmo que entre uma oficina nova antes dela
+  const liberada = i => MODO_LIVRE || estado.livre || i === 0 || !!estado.concluidas[OFICINAS[i].id] || !!estado.concluidas[OFICINAS[i - 1].id];
   function abrirMapa() {
     fecharModal();
     Bancada.parar();
     MinijogoPWM.parar();
+    Osciloscopio.parar();
     $('#mapa-saudacao').textContent = `Olá, ${estado.nome}!`;
     $('#mapa-avatar').innerHTML = spriteJogadora(2);
     const lista = $('#lista-oficinas');
@@ -221,7 +224,7 @@ const Som = (() => {
       const ok = liberada(i);
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'cartao-oficina' + (feita ? ' feita' : '');
+      b.className = 'cartao-oficina' + (feita ? ' feita' : '') + (o.chefao ? ' cartao-chefao' : '');
       b.disabled = !ok;
       b.innerHTML = `<span class="num">Oficina ${i + 1}${o.trilha ? ' · ' + escapar(o.trilha) : ''}</span><h3>${escapar(o.titulo)}</h3><p>${escapar(o.resumo)}</p>
         <span class="status">${feita ? `${estrelasHTML(feita)} Jogar de novo` : ok ? 'Começar ▶' : '🔒 Conclua a oficina anterior'}</span>`;
@@ -234,7 +237,8 @@ const Som = (() => {
 
   // ---------------------------------------------------------------- cena
   // monitora: quem da equipe está em cena; grupo: várias da equipe juntas na frente da sala
-  const cena = { indice: 0, oficina: null, i: 0, erros: 0, monitora: null, grupo: null, ilustracao: null, cenario: null, esperando: null, aoAvancar: null };
+  // vida: quanto falta para vencer o chefão (só na oficina que tem chefao)
+  const cena = { indice: 0, oficina: null, i: 0, erros: 0, monitora: null, grupo: null, ilustracao: null, cenario: null, esperando: null, aoAvancar: null, vida: 0 };
 
   // aplica o que um passo muda em quem está em cena
   function elencoDoPasso(p) {
@@ -254,6 +258,7 @@ const Som = (() => {
   }
 
   function definirIlustracao(id) {
+    Osciloscopio.parar();
     const painel = $('#cena-ilustracao');
     cena.ilustracao = id || null;
     if (!id) { painel.hidden = true; painel.innerHTML = ''; }
@@ -329,6 +334,8 @@ const Som = (() => {
     fecharModal();
     const o = OFICINAS[indice];
     Object.assign(cena, { indice, oficina: o, i: passoInicial, erros: 0, monitora: null, grupo: null, ilustracao: null, cenario: null, esperando: null, aoAvancar: null });
+    cena.vida = o.passos.slice(passoInicial).filter(golpeia).length;
+    atualizarChefao();
     $('#cena-titulo').textContent = `Oficina ${indice + 1} · ${o.titulo}`;
     // ao retomar no meio, reaplica cenário, monitora e ilustração dos passos anteriores
     let cen = 'laboratorio', ilu = null;
@@ -337,7 +344,7 @@ const Som = (() => {
       if (p.cenario) cen = p.cenario;
       elencoDoPasso(p);
       if ('ilustracao' in p) ilu = p.ilustracao;
-      if (p.tipo === 'resistor' || p.tipo === 'desafio' || p.tipo === 'pwm') ilu = null;
+      if (p.tipo === 'resistor' || p.tipo === 'desafio' || p.tipo === 'pwm' || p.tipo === 'osciloscopio') ilu = null;
     }
     const primeiro = o.passos[passoInicial];
     definirCenario(primeiro && primeiro.cenario ? primeiro.cenario : cen);
@@ -355,6 +362,7 @@ const Som = (() => {
     if (p.tipo === 'quiz') mostrarQuiz(p);
     else if (p.tipo === 'resistor') mostrarMontaResistor(p);
     else if (p.tipo === 'pwm') mostrarPWM(p);
+    else if (p.tipo === 'osciloscopio') mostrarOsciloscopio(p);
     else if (p.tipo === 'desafio') abrirDesafio(p);
     else if (p.texto) { falar(p.quem, formatar(p.texto)); cena.esperando = 'clique'; }
     else avancar();
@@ -408,6 +416,7 @@ const Som = (() => {
       $('#dialogo-seta').hidden = false;
       cena.esperando = 'clique';
       botao.blur();
+      golpe();
     } else {
       Som.tocar('erro');
       cena.erros++;
@@ -504,6 +513,57 @@ const Som = (() => {
     falar(p.quem, formatar(p.texto), () => {});
   }
 
+  // ---------------------------------------------------------------- minijogo: os botões do osciloscópio
+  // depois de vencer, a tela continua ligada (com os botões travados) até a próxima ilustração
+  function mostrarOsciloscopio(p) {
+    cena.esperando = 'osciloscopio';
+    cena.ilustracao = 'osciloscopio';
+    const painel = $('#cena-ilustracao');
+    painel.onclick = null;
+    painel.hidden = false;
+    painel.classList.add('alta');
+    Osciloscopio.iniciar(painel, {
+      sinal: p.sinal, zero: p.zero, inicio: p.inicio, meta: p.meta, controles: p.controles,
+      aoVencer: () => {
+        Som.tocar('certo');
+        golpe();
+        const fb = $('#dialogo-feedback');
+        fb.hidden = false;
+        fb.className = 'dialogo-feedback certo';
+        fb.innerHTML = '✔ ' + formatar(p.sucesso || 'Golpe certeiro!');
+        $('#dialogo-seta').hidden = false;
+        cena.esperando = 'clique';
+      },
+    });
+    falar(p.quem, formatar(p.texto), () => {});
+  }
+
+  // ---------------------------------------------------------------- chefão final
+  // cada pergunta e cada rodada do osciloscópio acertada tira um pedaço da vida do chefão
+  const golpeia = p => p.tipo === 'quiz' || p.tipo === 'osciloscopio';
+
+  function atualizarChefao(perdeu = false) {
+    const o = cena.oficina, hud = $('#chefao');
+    hud.hidden = !o.chefao;
+    $('#cena-palco').classList.toggle('com-chefao', !!o.chefao);
+    if (!o.chefao) return;
+    const total = o.passos.filter(golpeia).length;
+    hud.classList.toggle('vencido', cena.vida === 0);
+    $('#chefao-nome').textContent = cena.vida ? `Chefão final: ${o.chefao}` : `${o.chefao}: vencido!`;
+    $('#chefao-vida').innerHTML = Array.from({ length: total }, (_, k) =>
+      `<i class="${k < cena.vida ? 'cheio' : k === cena.vida && perdeu ? 'perdeu' : ''}"></i>`).join('');
+    hud.setAttribute('aria-label', `Vida do chefão: ${cena.vida} de ${total}`);
+    if (perdeu) tremer(hud);
+  }
+
+  function golpe() {
+    if (!cena.oficina.chefao || cena.vida <= 0) return;
+    cena.vida--;
+    atualizarChefao(true);
+    setTimeout(() => Som.tocar(cena.vida ? 'golpe' : 'sucesso'), 150);
+    if (!cena.vida) confete();
+  }
+
   // ---------------------------------------------------------------- desafios na bancada
   const bancada = { desafio: null, concluido: false, dica: 0, autoAtiva: false };
 
@@ -583,7 +643,8 @@ const Som = (() => {
     const ultima = i === OFICINAS.length - 1;
     const proxima = !ultima ? `<button class="btn" id="btn-proxima">Próxima oficina ▶</button>` : `<button class="btn" id="btn-ver-cert">Ver meu certificado</button>`;
     const comentario = cena.erros === 0 ? 'Sem nenhum erro nas perguntas!' : `Você errou ${cena.erros} ${cena.erros === 1 ? 'vez' : 'vezes'} e seguiu em frente. É assim que se aprende!`;
-    const m = modal(`<div class="palco-mini">${spriteJogadora(3)}</div><h2>Oficina ${i + 1} concluída!</h2>${estrelasHTML(estrelas)}<p><strong>${escapar(o.titulo)}</strong></p><p>${comentario}</p>
+    const titulo = o.chefao ? 'Chefão vencido!' : `Oficina ${i + 1} concluída!`;
+    const m = modal(`<div class="palco-mini">${spriteJogadora(3)}</div><h2>${titulo}</h2>${estrelasHTML(estrelas)}<p><strong>${escapar(o.titulo)}</strong></p><p>${comentario}</p>
       <div class="modal-acoes"><button class="btn btn-claro" id="btn-mapa">Ver oficinas</button>${proxima}</div>`);
     m.querySelector('#btn-mapa').addEventListener('click', abrirMapa);
     const bp = m.querySelector('#btn-proxima');
@@ -604,7 +665,7 @@ const Som = (() => {
   // ---------------------------------------------------------------- eventos gerais
   $('#tela-cena').addEventListener('click', ev => {
     if (ev.target.closest('button, input, .barra')) return;
-    if (ev.target.closest('#cena-ilustracao') && (cena.esperando === 'resistor' || cena.esperando === 'pwm')) return;
+    if (ev.target.closest('#cena-ilustracao') && ['resistor', 'pwm', 'osciloscopio'].includes(cena.esperando)) return;
     tocarAvanco();
   });
   document.addEventListener('keydown', ev => {

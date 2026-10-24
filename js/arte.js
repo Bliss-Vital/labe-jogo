@@ -479,6 +479,266 @@ const Arte = (() => {
     },
   });
 
+  // ---------------------------------------------------------------- oficina de circuitos equivalentes
+  const fio = d => `<path d="${d}" fill="none" stroke="${TINTA}" stroke-width="3"/>`;
+  const ponto = (x, y) => `<circle cx="${x}" cy="${y}" r="5" fill="${TINTA}"/>`;
+  // borne: ponto de ligação (A, B) por onde o circuito é visto de fora
+  const borne = (x, y, rot) => `<circle cx="${x}" cy="${y}" r="6" fill="#fff" stroke="${TINTA}" stroke-width="3"/>` + (rot ? texto(x, y - 14, rot, { tam: 16, peso: 800 }) : '');
+  const quadro = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" fill="#f3e6fb"/>`;
+
+  Object.assign(ILUSTRACOES, {
+    'caixa-preta'() {
+      let s = `<rect x="40" y="50" width="230" height="160" rx="10" fill="#f3e6fb" stroke="${TINTA}" stroke-width="3" stroke-dasharray="10 7"/>`;
+      // por dentro: R1 em série com R2 e R3 em paralelo
+      s += fio('M304 90 H240 M150 90 H90 M90 170 H304') + zigH(150, 240, 90) + zigV(90, 90, 170) + zigV(150, 90, 170) + ponto(150, 90) + ponto(150, 170);
+      s += texto(155, 36, 'por dentro: vários resistores', { tam: 14, peso: 700 });
+      s += borne(310, 90, 'A') + borne(310, 170, 'B');
+      s += texto(385, 146, '=', { tam: 44, peso: 800 });
+      s += fio('M446 90 H520 M520 170 H446') + zigV(520, 90, 170) + borne(440, 90, 'A') + borne(440, 170, 'B');
+      s += texto(520, 36, 'um resistor só', { tam: 14, peso: 700 }) + texto(540, 136, 'Req', { tam: 18, peso: 800, cor: '#8e44ad', ancora: 'start' });
+      s += texto(300, 246, 'Entre A e B, os dois medem o mesmo valor: são equivalentes.', { tam: 14, peso: 700 });
+      return [600, 260, s];
+    },
+
+    ohmimetro() {
+      let s = `<rect x="40" y="16" width="170" height="280" rx="24" fill="#f07a2a"/>
+        <rect x="54" y="30" width="142" height="252" rx="16" fill="#3a3a42"/>
+        <rect x="66" y="44" width="118" height="54" rx="6" fill="#cfe0c8"/>
+        <text x="152" y="84" font-size="34" font-family="ui-monospace,Consolas,monospace" font-weight="700" text-anchor="end" fill="#1f2a1c">1.00</text>
+        <text x="180" y="84" font-size="15" font-weight="800" text-anchor="end" fill="#1f2a1c">kΩ</text>
+        <circle cx="125" cy="168" r="38" fill="#5a5a64" stroke="#2b2b31" stroke-width="4"/>
+        <path d="M125 168 L154 140" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="86" cy="250" r="11" fill="#111" stroke="#777" stroke-width="2"/><circle cx="164" cy="250" r="11" fill="#d62828"/>`;
+      s += texto(80, 128, 'V⎓', { tam: 15, cor: '#ddd' }) + texto(172, 128, 'Ω', { tam: 20, peso: 800, cor: '#ffd23f' });
+      s += texto(86, 230, 'COM', { tam: 12, peso: 800, cor: '#fff' }) + texto(164, 230, 'VΩ', { tam: 12, peso: 800, cor: '#fff' });
+      // um resistor sozinho, fora de qualquer circuito
+      s += zigH(370, 540, 150) + texto(455, 126, '1 kΩ', { tam: 16, peso: 700 });
+      s += `<path d="M164 250 C 250 250 290 150 364 150" stroke="#d62828" stroke-width="4" fill="none"/>
+        <path d="M86 250 C 100 330 600 320 546 156" stroke="#111" stroke-width="4" fill="none"/>
+        <circle cx="370" cy="150" r="6" fill="#d62828"/><circle cx="540" cy="150" r="6" fill="#111"/>`;
+      s += texto(420, 36, 'Seletor em Ω e fonte desligada!', { tam: 15, peso: 800, cor: '#c0392b' });
+      s += texto(420, 68, 'Ele manda uma correntinha', { tam: 14 }) + texto(420, 86, 'e calcula a resistência.', { tam: 14 });
+      s += texto(455, 214, 'Sem caminho: OL', { tam: 14, peso: 700 });
+      return [600, 300, s];
+    },
+
+    'serie-resistores'() {
+      let s = fio('M46 80 H80 M380 80 H414') + zigH(80, 230, 80) + zigH(230, 380, 80) + ponto(230, 80) + borne(40, 80, 'A') + borne(420, 80, 'B');
+      s += texto(155, 58, '220 Ω', { tam: 15, peso: 700 }) + texto(305, 58, '330 Ω', { tam: 15, peso: 700 });
+      s += seta(150, 128, 90, '#8e44ad') + seta(310, 128, 90, '#8e44ad') + texto(230, 136, 'equivale a', { tam: 14, peso: 700, cor: '#8e44ad' });
+      s += fio('M46 190 H155 M305 190 H414') + zigH(155, 305, 190, '#8e44ad') + borne(40, 190, 'A') + borne(420, 190, 'B');
+      s += texto(230, 168, '550 Ω', { tam: 15, peso: 800, cor: '#8e44ad' });
+      s += quadro(455, 40, 135, 170);
+      s += texto(522, 80, 'R = R1 + R2', { tam: 16, peso: 800 }) + texto(522, 120, '220 + 330', { tam: 15 });
+      s += texto(522, 146, '= 550 Ω', { tam: 17, peso: 800, cor: '#8e44ad' }) + texto(522, 186, 'é só somar!', { tam: 14 });
+      s += texto(300, 246, 'Série: um caminho só, as resistências se somam.', { tam: 15, peso: 700 });
+      return [600, 262, s];
+    },
+
+    'paralelo-resistores'() {
+      let s = fio('M46 130 H100 M100 60 V200 M100 60 H140 M300 60 H340 M100 200 H140 M300 200 H340 M340 60 V200 M340 130 H394');
+      s += zigH(140, 300, 60) + zigH(140, 300, 200) + ponto(100, 130) + ponto(340, 130) + borne(40, 130, 'A') + borne(400, 130, 'B');
+      s += texto(220, 38, '1 kΩ', { tam: 15, peso: 700 }) + texto(220, 180, '1 kΩ', { tam: 15, peso: 700 });
+      s += seta(122, 60, 0, '#2364d2') + seta(122, 200, 0, '#2364d2') + texto(220, 136, 'dois caminhos', { tam: 14, peso: 700, cor: '#2364d2' });
+      s += quadro(430, 30, 160, 196);
+      s += texto(510, 58, 'R =', { tam: 16, peso: 800 }) + texto(510, 86, 'R1 × R2', { tam: 16, peso: 700 });
+      s += `<path d="M445 96 H575" stroke="${TINTA}" stroke-width="2.5"/>` + texto(510, 118, 'R1 + R2', { tam: 16, peso: 700 });
+      s += texto(510, 156, 'iguais: metade!', { tam: 14, peso: 800, cor: '#8e44ad' });
+      s += texto(510, 182, '1 kΩ e 1 kΩ', { tam: 14 }) + texto(510, 206, '= 500 Ω', { tam: 16, peso: 800, cor: '#8e44ad' });
+      s += texto(300, 262, 'Paralelo: mais caminhos, resistência menor que a menor.', { tam: 15, peso: 700 });
+      return [600, 278, s];
+    },
+
+    divisor() {
+      let s = fio('M70 110 V40 H220 M220 145 H330 M330 262 H70 V190') + fonteSimb(70, 150) + zigV(220, 40, 145) + zigV(220, 145, 262);
+      s += ponto(220, 145) + ponto(220, 262) + borne(336, 145, '') + borne(336, 262, '');
+      s += texto(250, 98, 'R1', { tam: 16, peso: 800, ancora: 'start' }) + texto(250, 212, 'R2', { tam: 16, peso: 800, ancora: 'start' });
+      s += `<path d="M336 154 V253" stroke="#d62828" stroke-width="2.5" stroke-dasharray="6 5"/>` + texto(350, 208, 'Vsaída', { tam: 15, peso: 800, cor: '#d62828', ancora: 'start' });
+      s += quadro(420, 30, 170, 230);
+      s += texto(505, 62, 'Vsaída =', { tam: 15, peso: 800, cor: '#d62828' }) + texto(505, 92, 'Vfonte × R2', { tam: 14, peso: 700 });
+      s += `<path d="M435 102 H575" stroke="${TINTA}" stroke-width="2.5"/>` + texto(505, 124, 'R1 + R2', { tam: 14, peso: 700 });
+      s += texto(505, 170, 'R1 igual a R2:', { tam: 14, peso: 700 }) + texto(505, 192, 'metade da fonte', { tam: 14 });
+      s += texto(505, 228, '5 V → 2,5 V', { tam: 16, peso: 800, cor: '#8e44ad' });
+      s += texto(300, 296, 'Divisor de tensão: dois resistores em série repartem a tensão.', { tam: 14, peso: 700 });
+      return [600, 310, s];
+    },
+
+    thevenin() {
+      let s = texto(300, 30, 'Visto de A e B, os dois circuitos se comportam igual.', { tam: 15, peso: 700 });
+      // o divisor
+      s += fio('M50 130 V60 H160 M160 170 H230 M230 270 H50 V210') + fonteSimb(50, 170) + zigV(160, 60, 170) + zigV(160, 170, 270);
+      s += ponto(160, 170) + ponto(160, 270) + borne(236, 170, 'A') + borne(236, 270, 'B');
+      s += texto(176, 122, 'R1', { tam: 15, peso: 800, ancora: 'start' }) + texto(176, 228, 'R2', { tam: 15, peso: 800, ancora: 'start' });
+      s += texto(300, 232, '=', { tam: 44, peso: 800 });
+      // o equivalente de Thévenin: uma fonte e um resistor
+      s += fio('M380 180 V170 H420 M540 170 H564 M380 260 V270 H564') + fonteSimb(380, 220, 'Vth') + zigH(420, 540, 170, '#8e44ad');
+      s += borne(570, 170, 'A') + borne(570, 270, 'B') + texto(480, 150, 'Rth', { tam: 16, peso: 800, cor: '#8e44ad' });
+      s += texto(300, 304, 'Vth: a tensão entre A e B sem nada ligado', { tam: 13, peso: 700 });
+      s += texto(300, 322, 'Rth: R1 e R2 em paralelo (com a fonte trocada por um fio)', { tam: 13, peso: 700 });
+      return [600, 332, s];
+    },
+
+    carga() {
+      let s = fio('M60 120 V60 H110 M250 60 H330 M330 260 H60 V200') + fonteSimb(60, 160, '2,5 V') + zigH(110, 250, 60, '#8e44ad') + zigV(330, 60, 260, '#1f8f52');
+      s += texto(180, 38, 'Rth = 500 Ω', { tam: 14, peso: 800, cor: '#8e44ad' }) + seta(290, 60, 0);
+      s += texto(352, 164, 'carga', { tam: 15, peso: 800, cor: '#1f8f52', ancora: 'start' });
+      s += quadro(420, 24, 170, 232) + texto(505, 54, 'Tensão na carga', { tam: 14, peso: 800 });
+      [['100 Ω', '0,42 V', '#c0392b'], ['500 Ω', '1,25 V', '#b26b00'], ['5 kΩ', '2,27 V', '#1f8f52'], ['50 kΩ', '2,48 V', '#1f8f52']].forEach(([r, v, cor], i) => {
+        s += texto(440, 92 + i * 32, r, { tam: 14, ancora: 'start' }) + texto(575, 92 + i * 32, v, { tam: 14, peso: 800, cor, ancora: 'end' });
+      });
+      s += texto(505, 232, 'sem carga: 2,5 V', { tam: 13 });
+      s += texto(300, 290, 'Carga e Rth formam um novo divisor: carga grande, quase nada muda.', { tam: 13, peso: 700 });
+      return [600, 302, s];
+    },
+  });
+
+  // ---------------------------------------------------------------- chefão final: o osciloscópio
+  const VERDE = '#8bff6b';
+  // traço da onda numa tela de divisões de d pixels com o canto em (x, y): f(u) dá a altura em divisões
+  // (−4 a 4) na posição horizontal u (0 a 10)
+  function tracoOsc(x, y, d, f, { cor = VERDE, opacidade = 1 } = {}) {
+    const pts = [];
+    for (let k = 0; k <= 200; k++) pts.push(`${(x + k / 20 * d).toFixed(1)},${(y + 4 * d - f(k / 20) * d).toFixed(1)}`);
+    return `<polyline points="${pts.join(' ')}" fill="none" stroke="${cor}" stroke-width="3" stroke-linejoin="round" opacity="${opacidade}"/>`;
+  }
+  // tela de 10 × 8 divisões, com a grade e (se tiver f) a onda
+  function telaOsc(x, y, d, f) {
+    const w = 10 * d, h = 8 * d;
+    let grade = '';
+    for (let i = 1; i < 10; i++) grade += `M${x + i * d} ${y} V${y + h} `;
+    for (let j = 1; j < 8; j++) grade += `M${x} ${y + j * d} H${x + w} `;
+    return `<rect x="${x - 6}" y="${y - 6}" width="${w + 12}" height="${h + 12}" rx="4" fill="#0f1f24"/>
+      <path d="${grade}" stroke="#24434b" stroke-width="1.5"/>
+      <path d="M${x + w / 2} ${y} V${y + h} M${x} ${y + h / 2} H${x + w}" stroke="#3d6b75" stroke-width="2"/>` + (f ? tracoOsc(x, y, d, f) : '');
+  }
+  const seno = (amp, periodo, desloc = 0) => u => amp * Math.sin(2 * Math.PI * (u - desloc) / periodo);
+  const botaoOsc = (x, y, r = 18) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#5a5a64" stroke="#2b2b31" stroke-width="3"/>
+    <path d="M${x} ${y} V${y - r + 5}" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`;
+  const conectorBNC = (x, y, r = 11) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#c0c0c0" stroke="#555" stroke-width="3"/><circle cx="${x}" cy="${y}" r="${r * 0.35}" fill="#555"/>`;
+  const numero = (x, y, n) => `<circle cx="${x}" cy="${y}" r="11" fill="#e5484d"/>` + texto(x, y + 5, n, { tam: 13, peso: 800, cor: '#fff' });
+
+  // o osciloscópio como chefão: o rosto é desenhado pelo traço verde da tela
+  function chefao(vencido) {
+    let s = vencido ? texto(300, 28, 'VENCIDO!', { tam: 24, peso: 800, cor: '#1f8f52' }) : texto(300, 28, 'CHEFÃO FINAL', { tam: 24, peso: 800, cor: '#c0392b' });
+    s += `<rect x="140" y="276" width="40" height="10" fill="${TINTA}"/><rect x="420" y="276" width="40" height="10" fill="${TINTA}"/>`;
+    s += `<rect x="100" y="40" width="400" height="236" rx="14" fill="#cfc8d8" stroke="${TINTA}" stroke-width="4"/>`;
+    s += `<rect x="114" y="54" width="262" height="208" rx="8" fill="#9d93ab"/>` + telaOsc(130, 70, 23, null);
+    if (vencido) {
+      // olhos felizes e um sorriso
+      s += `<path d="M175 142 L195 120 L215 142 M275 142 L295 120 L315 142 M180 192 Q245 246 310 192" stroke="${VERDE}" stroke-width="5" fill="none"/>`;
+    } else {
+      // sobrancelhas bravas, olhos quadrados e uma boca em dente de serra
+      let boca = 'M170 212';
+      for (let i = 1; i <= 8; i++) boca += ` L${170 + i * 18.75} ${i % 2 ? 198 : 226}`;
+      s += `<path d="M165 100 L215 122 M325 100 L275 122 ${boca}" stroke="${VERDE}" stroke-width="5" fill="none"/>`;
+      s += `<rect x="178" y="130" width="22" height="22" fill="${VERDE}"/><rect x="290" y="130" width="22" height="22" fill="${VERDE}"/>`;
+    }
+    [['VOLTS/DIV', 98], ['TEMPO/DIV', 164], ['TRIGGER', 230]].forEach(([rot, y]) => {
+      s += texto(440, y - 28, rot, { tam: 11, peso: 700 }) + botaoOsc(440, y, 20);
+    });
+    return [600, 292, s];
+  }
+
+  Object.assign(ILUSTRACOES, {
+    chefao: () => chefao(false),
+    'chefao-vencido': () => chefao(true),
+
+    osciloscopio() {
+      let s = `<rect x="16" y="40" width="350" height="230" rx="12" fill="#cfc8d8" stroke="${TINTA}" stroke-width="4"/>`;
+      s += telaOsc(40, 64, 18, seno(2.5, 4));
+      [['VOLTS/DIV', 92], ['TEMPO/DIV', 156], ['TRIGGER', 220]].forEach(([rot, y]) => {
+        s += texto(300, y - 26, rot, { tam: 11, peso: 700 }) + botaoOsc(300, y);
+      });
+      s += conectorBNC(84, 246) + texto(104, 251, 'CH1', { tam: 13, peso: 800, ancora: 'start' });
+      s += numero(236, 56, '1') + numero(338, 78, '2') + numero(338, 142, '3') + numero(338, 206, '4') + numero(56, 246, '5');
+      s += quadro(384, 30, 208, 248);
+      [['Tela', 'a tensão ao longo do tempo'], ['VOLTS/DIV', 'volts por divisão (altura)'], ['TEMPO/DIV', 'tempo por divisão (largura)'],
+        ['TRIGGER', 'deixa a imagem parada'], ['CH1', 'entrada da ponta de prova']].forEach(([nome, desc], i) => {
+        const y = 60 + i * 45;
+        s += numero(404, y - 5, String(i + 1)) + texto(422, y, nome, { tam: 15, peso: 800, ancora: 'start' });
+        s += texto(398, y + 21, desc, { tam: 12, ancora: 'start' });
+      });
+      return [600, 290, s];
+    },
+
+    'tela-osc'() {
+      let s = telaOsc(70, 30, 24, seno(2.5, 5));
+      s += `<rect x="238" y="54" width="24" height="24" fill="#ffd23f" opacity=".5"/>` + `<path d="M262 66 H336" stroke="#b26b00" stroke-width="2"/>`;
+      s += texto(342, 71, '1 divisão', { tam: 14, peso: 800, cor: '#b26b00', ancora: 'start' });
+      s += `<path d="M36 222 V44" stroke="${TINTA}" stroke-width="3"/>` + seta(36, 40, -90, TINTA) + texto(36, 22, 'tensão', { tam: 14, peso: 800 });
+      s += `<path d="M70 248 H300" stroke="${TINTA}" stroke-width="3"/>` + seta(304, 248, 0, TINTA) + texto(190, 274, 'tempo', { tam: 14, peso: 800 });
+      s += quadro(436, 30, 156, 240);
+      s += texto(514, 62, 'Vertical', { tam: 15, peso: 800 }) + texto(514, 84, 'tensão', { tam: 14 }) + texto(514, 104, 'VOLTS/DIV', { tam: 12, cor: '#8e44ad', peso: 700 });
+      s += texto(514, 144, 'Horizontal', { tam: 15, peso: 800 }) + texto(514, 166, 'tempo', { tam: 14 }) + texto(514, 186, 'TEMPO/DIV', { tam: 12, cor: '#8e44ad', peso: 700 });
+      s += texto(514, 226, 'A grade tem', { tam: 13 }) + texto(514, 246, '10 × 8 divisões', { tam: 13, peso: 700 });
+      return [600, 284, s];
+    },
+
+    'ponta-de-prova'() {
+      // gerador de funções
+      let s = texto(106, 44, 'gerador de funções', { tam: 14, peso: 800 });
+      s += `<rect x="16" y="60" width="180" height="170" rx="10" fill="#4b5f8a" stroke="${TINTA}" stroke-width="3"/>
+        <rect x="32" y="76" width="148" height="50" fill="#cfe0c8" stroke="#2b2b31" stroke-width="3"/>`;
+      s += tracoOsc(40, 85, 4, seno(3, 5), { cor: '#1f2a1c' });
+      s += texto(172, 110, '500 Hz', { tam: 18, peso: 700, cor: '#1f2a1c', ancora: 'end' });
+      s += [32, 70, 108].map(x => `<rect x="${x}" y="140" width="30" height="16" fill="#cfd6e6"/>`).join('');
+      s += `<circle cx="168" cy="160" r="11" fill="#d62828"/><circle cx="168" cy="205" r="11" fill="#1b1b1b" stroke="#777" stroke-width="2"/>`;
+      s += texto(148, 165, 'SAÍDA', { tam: 11, peso: 700, cor: '#fff', ancora: 'end' }) + texto(148, 210, 'GND', { tam: 11, peso: 700, cor: '#fff', ancora: 'end' });
+      // ponta de prova: gancho no sinal e jacaré no terra
+      s += `<path d="M358 160 C 410 160 420 222 453 222" stroke="#3a3a42" stroke-width="5" fill="none"/>`;
+      s += `<path d="M292 170 C 292 212 240 205 206 205" stroke="#1b1b1b" stroke-width="3" fill="none"/>
+        <rect x="192" y="198" width="18" height="14" fill="#1b1b1b"/><path d="M193 199 L176 205 L193 211 Z" fill="#1b1b1b"/>`;
+      s += `<path d="M246 160 H164 Q156 160 158 150" stroke="#9aa0a6" stroke-width="3" fill="none"/>
+        <rect x="246" y="154" width="18" height="12" fill="#8d8d9a"/><rect x="262" y="150" width="96" height="20" rx="6" fill="#3a3a42"/>`;
+      s += texto(300, 136, 'gancho: no sinal', { tam: 14, peso: 800, cor: '#d62828' });
+      s += texto(300, 250, 'jacaré: no terra (GND)', { tam: 14, peso: 800 });
+      // osciloscópio
+      s += `<rect x="440" y="70" width="150" height="180" rx="10" fill="#cfc8d8" stroke="${TINTA}" stroke-width="3"/>`;
+      s += telaOsc(452, 86, 10, seno(2, 4)) + botaoOsc(572, 102, 9) + botaoOsc(572, 134, 9) + botaoOsc(572, 166, 9);
+      s += conectorBNC(464, 222, 9) + texto(480, 227, 'CH1', { tam: 12, peso: 800, ancora: 'start' });
+      s += texto(515, 56, 'osciloscópio', { tam: 14, peso: 800 });
+      s += texto(300, 282, 'O osciloscópio mede a tensão do gancho em relação ao terra.', { tam: 14, peso: 700 });
+      return [600, 292, s];
+    },
+
+    'pico-a-pico'() {
+      let s = telaOsc(40, 30, 24, seno(2, 4, 0.5));
+      s += texto(48, 214, 'CH1 2 V/div', { tam: 13, peso: 700, cor: VERDE, ancora: 'start' });
+      s += `<path d="M268 78 H300 M220 174 H300" stroke="#ffd23f" stroke-width="2" stroke-dasharray="5 4"/>`;
+      s += `<path d="M298 78 H314 M306 78 V174 M298 174 H314" stroke="${TINTA}" stroke-width="3"/>`;
+      s += texto(322, 132, '4 div', { tam: 17, peso: 800, cor: '#b26b00', ancora: 'start' });
+      s += quadro(410, 40, 180, 170);
+      s += texto(500, 78, 'Vpp =', { tam: 17, peso: 800, cor: '#8e44ad' }) + texto(500, 108, 'divisões ×', { tam: 15, peso: 700 }) + texto(500, 132, 'VOLTS/DIV', { tam: 15, peso: 700 });
+      s += texto(500, 180, 'pico a pico: de', { tam: 13 }) + texto(500, 198, 'cima até embaixo', { tam: 13 });
+      return [600, 236, s];
+    },
+
+    periodo() {
+      let s = telaOsc(40, 40, 24, seno(3, 4, 1));
+      s += texto(48, 226, '1 ms/div', { tam: 13, peso: 700, cor: VERDE, ancora: 'start' });
+      s += `<path d="M64 26 V136 M160 26 V136" stroke="#ffd23f" stroke-width="2" stroke-dasharray="5 4"/>`;
+      s += `<path d="M64 18 V32 M64 25 H160 M160 18 V32" stroke="#b26b00" stroke-width="3"/>` + texto(176, 30, 'T = 4 divisões', { tam: 14, peso: 800, cor: '#b26b00', ancora: 'start' });
+      s += quadro(330, 48, 260, 186);
+      s += texto(460, 80, 'Período (T)', { tam: 15, peso: 800 }) + texto(460, 102, '4 div × 1 ms = 4 ms', { tam: 14 });
+      s += texto(460, 144, 'Frequência', { tam: 15, peso: 800 }) + texto(460, 170, 'f = 1 ÷ T', { tam: 18, peso: 800, cor: '#8e44ad' });
+      s += texto(460, 206, '1 ÷ 0,004 s = 250 Hz', { tam: 14, peso: 700 });
+      return [600, 250, s];
+    },
+
+    trigger() {
+      let s = texto(140, 30, 'Sem trigger', { tam: 16, peso: 800, cor: '#c0392b' }) + texto(440, 30, 'Com trigger', { tam: 16, peso: 800, cor: '#1f8f52' });
+      // sem trigger: cada desenho começa num ponto diferente e as ondas se embaralham
+      s += telaOsc(30, 50, 22, seno(2.5, 4)) + tracoOsc(30, 50, 22, seno(2.5, 4, 1.3), { opacidade: 0.55 }) + tracoOsc(30, 50, 22, seno(2.5, 4, 2.6), { opacidade: 0.3 });
+      // com trigger: o desenho começa quando a onda sobe e cruza o nível (no meio da tela)
+      s += telaOsc(330, 50, 22, u => 2.5 * Math.sin(2 * Math.PI * (u - 5) / 4 + Math.asin(1 / 2.5)));
+      s += `<path d="M330 116 H550" stroke="#ff6ec7" stroke-width="2" stroke-dasharray="6 4"/><circle cx="440" cy="116" r="6" fill="#ff6ec7"/>`;
+      s += texto(562, 121, 'nível', { tam: 12, peso: 800, cor: '#d94fa6', ancora: 'start' });
+      s += texto(140, 254, 'cada desenho começa num', { tam: 13 }) + texto(140, 272, 'ponto diferente: ela corre', { tam: 13 });
+      s += texto(440, 254, 'começa quando a onda sobe', { tam: 13 }) + texto(440, 272, 'e cruza o nível: fica parada', { tam: 13 });
+      return [600, 284, s];
+    },
+  });
+
   // Tabela do código de cores da oficina (mesmos valores da tabela das aulas, de 5 faixas).
   // As colunas têm o nome da função de cada faixa, para servir também aos resistores de 4 faixas.
   const TABELA = [

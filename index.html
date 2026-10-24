@@ -27,7 +27,7 @@
         <li><span class="passo-icone" data-icone="resistor"></span><span><strong>Escolha sua personagem</strong> e entre no laboratório.</span></li>
         <li><span class="passo-icone" data-icone="multimetro"></span><span><strong>Converse com as monitoras</strong> e aprenda tensão, corrente, resistores e LEDs.</span></li>
         <li><span class="passo-icone" data-icone="protoboard"></span><span><strong>Monte circuitos na bancada</strong>: acenda LEDs, ligue em série e em paralelo, meça com o multímetro e faça um motor girar.</span></li>
-        <li><span class="passo-icone" data-icone="arduino"></span><span><strong>Programe um Arduino</strong> e, completando as oficinas, ganhe seu certificado.</span></li>
+        <li><span class="passo-icone" data-icone="arduino"></span><span><strong>Programe um Arduino</strong>, enfrente o <strong>chefão final</strong>, o osciloscópio, e ganhe seu certificado.</span></li>
       </ol>
       <div class="acoes-abertura">
         <button type="button" class="btn btn-grande btn-rosa" id="btn-comecar">Começar</button>
@@ -82,6 +82,7 @@
     <div class="cena-palco" id="cena-palco">
       <canvas id="cena-canvas" aria-hidden="true"></canvas>
       <div id="cena-ilustracao" class="cena-ilustracao" hidden></div>
+      <div id="chefao" class="chefao" hidden><span class="chefao-nome" id="chefao-nome"></span><div class="chefao-vida" id="chefao-vida"></div></div>
     </div>
     <div id="caixa-dialogo" class="caixa-dialogo" aria-live="polite">
       <div class="dialogo-retrato" id="dialogo-retrato" aria-hidden="true"></div>
@@ -160,6 +161,7 @@
 <script src="js/desafios.js"></script>
 <script src="js/arduino.js"></script>
 <script src="js/pwm.js"></script>
+<script src="js/osciloscopio.js"></script>
 <script src="js/bancada.js"></script>
 <script src="js/motor.js"></script>
 </body>

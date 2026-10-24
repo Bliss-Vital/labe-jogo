@@ -6,15 +6,19 @@
  *   monitora           quem dá as dicas (id de PERSONAGENS, em historia.js, ex.: 'suzanne')
  *   intro              primeira fala da monitora na bancada
  *   gaveta             o que aparece na gaveta: resistores (valores em Ω), leds (cores),
- *                      fios, multimetro, motor, buzzer e arduino (true/false)
+ *                      fios, motor, buzzer e arduino (true/false); multimetro: true (só mede
+ *                      tensão) ou 'seletor' (a participante gira entre V⎓ e Ω)
  *   dicas              lista de dicas do botão "Pedir dica" (uma por clique)
  *   verificar(c)       devolve true quando o desafio foi cumprido
  *   dicaAoVivo(c)      (opcional) comentário da monitora sobre a montagem atual
+ *   semFonte           (opcional) o desafio é feito com a fonte desligada (medir resistência):
+ *                      a dicaAoVivo também aparece com ela desligada
  *   aoConcluir(c)      (opcional) guarda valores para usar na história, ex.: {medidaV: '3,2'}
  *   sucesso            fala da monitora quando dá certo
  *
  * "c" é o contexto da bancada: c.pecas, c.sondas, c.ligada, c.res (resultado do
- * simulador, só com a fonte ligada), c.leitura (multímetro), c.no(furo), c.mesmaColuna(peca).
+ * simulador, só com a fonte ligada), c.modo do multímetro ('V' ou 'Ω'), c.leitura (volts no V,
+ * ohms no Ω, Infinity quando o visor mostra OL), c.no(furo), c.mesmaColuna(peca).
  */
 
 const fmt = (n, casas = 2) => n.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
@@ -53,6 +57,36 @@ function sondasNosLados(c, p) {
   if (!c.sondas.v || !c.sondas.p) return false;
   return sondasEm(c, p) || (c.no(c.sondas.v) === c.no(p.b) && c.no(c.sondas.p) === c.no(p.a));
 }
+
+// Comentários do multímetro nos desafios de medir resistência
+function dicaOhmimetro(c) {
+  if (c.modo !== 'Ω') return c.sondas.v && c.sondas.p ? { tipo: 'aviso', texto: 'O seletor do multímetro está em **V⎓**, que mede tensão. Clique no seletor para girar até **Ω**.' } : null;
+  if (c.ligada) return { tipo: 'aviso', texto: '**Desligue a fonte!** O ohmímetro usa a bateria dele para medir: com a fonte ligada, a leitura não vale.' };
+  if (c.leitura === Infinity) return { tipo: 'info', texto: 'O visor mostra **OL**: não existe caminho entre as pontas. Confira se os resistores se encontram numa mesma coluna e se as pontas estão nas extremidades.' };
+  if (c.leitura !== null && c.leitura < 1) return { tipo: 'info', texto: 'O visor mostra 0: as duas pontas estão no mesmo ponto do circuito. Coloque uma em cada extremidade dos resistores.' };
+  return null;
+}
+const dicaVoltimetro = c => (c.modo === 'Ω' ? { tipo: 'aviso', texto: 'O seletor está em **Ω**, que mede resistência. Para medir tensão, clique no seletor e volte para **V⎓**.' } : null);
+const medidaOhms = c => c.modo === 'Ω' && !c.ligada && Number.isFinite(c.leitura);
+const nResistores = c => c.pecas.filter(p => p.tipo === 'resistor').length;
+const emParalelo = valores => 1 / valores.reduce((s, r) => s + 1 / r, 0);
+
+// Divisor de tensão: os resistores ligados no ponto da ponta vermelha, separados entre os que
+// vão para o + (cima) e os que vão para o − (baixo). Uma carga entra junto com os de baixo.
+function ladosDoDivisor(c) {
+  const lados = { cima: [], baixo: [] };
+  if (!c.res || !c.sondas.v) return lados;
+  const meio = c.no(c.sondas.v);
+  for (const r of c.res.resistores) {
+    const outro = c.no(r.peca.a) === meio ? r.peca.b : c.no(r.peca.b) === meio ? r.peca.a : null;
+    if (!outro || c.no(outro) === meio) continue;
+    const v = c.res.tensao(outro);
+    if (v > Simulador.FONTE_V - 0.1) lados.cima.push(r);
+    else if (Math.abs(v) < 0.01) lados.baixo.push(r);
+  }
+  return lados;
+}
+const pretaNoNegativo = c => !!c.sondas.p && Math.abs(c.res.tensao(c.sondas.p)) < 0.01;
 
 // Comentários sobre o código do Arduino que deveria controlar o pino indicado
 function dicaArduino(c, pino) {
@@ -196,6 +230,117 @@ const DESAFIOS = {
     sucesso: 'Mandou bem! Agora você tem a tensão sobre o resistor. Com a Lei de Ohm dá para descobrir a corrente!',
   },
 
+  // ---------------------------------------------------------------- oficina de circuitos equivalentes
+  'equivalente-serie': {
+    titulo: 'Resistores em série',
+    objetivo: 'Com a fonte **desligada**, monte **3,2 kΩ** com dois resistores em série e confira com o multímetro no **Ω**.',
+    monitora: 'julia',
+    intro: 'A gaveta não tem resistor de 3,2 kΩ, mas dá para fazer um! Depois de montar, clique no **seletor** do multímetro para girar até **Ω** e encoste uma ponta em cada extremidade.',
+    gaveta: { resistores: [1000, 2200, 4700], fios: true, multimetro: 'seletor' },
+    semFonte: true,
+    dicas: [
+      'Clique no **seletor** do multímetro (a rodinha) para girar de V⎓ para **Ω**. A fonte fica desligada.',
+      'Em série, um resistor termina na mesma coluna onde o outro começa. Por exemplo: um da coluna 5 até a 9 e outro da coluna 9 até a 13.',
+      'Quais dois valores da gaveta somam 3200 Ω? Depois, uma ponta do multímetro na primeira coluna da fileira e a outra na última.',
+    ],
+    verificar: c => medidaOhms(c) && nResistores(c) >= 2 && perto(c.leitura, 3200, 0.01),
+    dicaAoVivo(c) {
+      const o = dicaOhmimetro(c);
+      if (o) return o;
+      if (medidaOhms(c)) return { tipo: 'info', texto: `O multímetro mostra **${Arte.ohms(Math.round(c.leitura))}**. Em série os valores se somam: quais dois resistores da gaveta dão 3,2 kΩ juntos?` };
+    },
+    sucesso: '**3,2 kΩ**! Um de 1 kΩ e um de 2,2 kΩ em série funcionam como um resistor só de 3,2 kΩ. Esse é o resistor **equivalente**.',
+  },
+
+  'equivalente-paralelo': {
+    titulo: 'Resistores em paralelo',
+    objetivo: 'A gaveta não tem resistor de 500 Ω. Monte **500 Ω** com dois resistores **em paralelo** e meça com o ohmímetro.',
+    monitora: 'julia',
+    intro: 'Em paralelo, os dois resistores ligam **as mesmas duas colunas**, lado a lado. Qual par da gaveta dá 500 Ω?',
+    gaveta: { resistores: [470, 1000, 2200], fios: true, multimetro: 'seletor' },
+    semFonte: true,
+    dicas: [
+      'Coloque um resistor da coluna 5 até a 9 na linha **a**, e outro também da coluna 5 até a 9, na linha **c**. Os dois ficam lado a lado.',
+      'Dois resistores **iguais** em paralelo valem a **metade** de um. A metade de quanto dá 500?',
+      'Para medir: uma ponta na coluna onde os resistores começam e a outra na coluna onde eles terminam. Seletor em **Ω** e fonte desligada.',
+    ],
+    verificar: c => medidaOhms(c) && nResistores(c) >= 2 && perto(c.leitura, 500, 0.015),
+    dicaAoVivo(c) {
+      const o = dicaOhmimetro(c);
+      if (o) return o;
+      if (!medidaOhms(c)) return;
+      const r = Arte.ohms(Math.round(c.leitura));
+      if (c.leitura > 1000) return { tipo: 'info', texto: `Deu **${r}**. Em paralelo o resultado fica **menor** que o menor resistor: confira se os dois ligam as mesmas duas colunas.` };
+      return { tipo: 'info', texto: `Deu **${r}**. Lembre: dois resistores **iguais** em paralelo valem a **metade** de um.` };
+    },
+    sucesso: 'Isso! Dois de 1 kΩ em paralelo valem **500 Ω**: com dois caminhos, fica mais fácil a corrente passar.',
+  },
+
+  divisor: {
+    titulo: 'Divisor de tensão',
+    objetivo: 'Monte um **divisor de tensão** com dois resistores em série entre o **+** e o **−** e meça **2,5 V** no ponto do meio.',
+    monitora: 'julia',
+    intro: 'Agora vamos medir **tensão**, com a fonte ligada. Antes de medir, gire o seletor do multímetro de volta para **V⎓**!',
+    gaveta: { resistores: [220, 1000], fios: true, multimetro: 'seletor' },
+    dicas: [
+      'Coloque um resistor da **trilha +** até uma coluna, por exemplo a 8, e outro dessa coluna até a **trilha −**. A coluna 8 é o ponto do meio.',
+      'Para dar metade da fonte, use **dois resistores iguais**.',
+      'Ligue a fonte. Ponta **preta** na trilha **−** e ponta **vermelha** na coluna do meio, com o seletor em **V⎓**.',
+    ],
+    verificar(c) {
+      if (!c.res || c.modo !== 'V' || c.leitura === null) return false;
+      const { cima, baixo } = ladosDoDivisor(c);
+      return cima.length > 0 && baixo.length > 0 && pretaNoNegativo(c) && c.leitura >= 2.4 && c.leitura <= 2.6;
+    },
+    dicaAoVivo(c) {
+      const v = dicaVoltimetro(c);
+      if (v) return v;
+      if (!c.res || c.leitura === null) return;
+      const { cima, baixo } = ladosDoDivisor(c);
+      if (!cima.length || !baixo.length) return;
+      if (!pretaNoNegativo(c)) return { tipo: 'aviso', texto: 'Deixe a ponta **preta** no **−** (trilha azul) e a vermelha no ponto do meio, entre os dois resistores.' };
+      return { tipo: 'info', texto: `O meio do divisor está com **${fmt(c.leitura)} V**. Para dar metade da fonte, os dois resistores precisam ter o **mesmo valor**.` };
+    },
+    aoConcluir(c) {
+      const { cima, baixo } = ladosDoDivisor(c);
+      const rth = emParalelo([emParalelo(cima.map(r => r.peca.valor)), emParalelo(baixo.map(r => r.peca.valor))]);
+      return { divisorV: fmt(c.leitura), divisorRth: Arte.ohms(Math.round(rth)) };
+    },
+    sucesso: 'Metade da fonte: **{divisorV} V**! Com dois resistores iguais, cada um fica com a mesma parte da tensão.',
+  },
+
+  carga: {
+    titulo: 'Ligando uma carga',
+    objetivo: 'Sem desmontar o divisor, ligue um **resistor de carga** do ponto do meio até o **−**. A saída precisa continuar **acima de 2,3 V**.',
+    monitora: 'julia',
+    intro: 'Teste as cargas da gaveta e fique de olho no multímetro: algumas derrubam a tensão do divisor, outras ele quase nem sente.',
+    gaveta: { resistores: [220, 1000, 10000], fios: true, multimetro: 'seletor' },
+    manterMontagem: true,
+    dicas: [
+      'A carga vai do **ponto do meio** do divisor até a **trilha −**: ela fica em paralelo com o resistor de baixo.',
+      'Ligou a carga e a tensão despencou? Remova e tente outra, de resistência **maior**.',
+      'Regra dos engenheiros: a carga precisa ser pelo menos **10 vezes maior** que o resistor de Thévenin do divisor.',
+    ],
+    verificar(c) {
+      if (!c.res || c.modo !== 'V' || c.leitura === null) return false;
+      const { cima, baixo } = ladosDoDivisor(c);
+      return cima.length > 0 && baixo.length > 1 && pretaNoNegativo(c) && c.leitura >= 2.3 && c.leitura <= 2.55;
+    },
+    dicaAoVivo(c) {
+      const v = dicaVoltimetro(c);
+      if (v) return v;
+      if (!c.res || c.leitura === null) return;
+      const { cima, baixo } = ladosDoDivisor(c);
+      if (cima.length && baixo.length > 1 && c.leitura < 2.3) return { tipo: 'aviso', texto: `Com essa carga a saída caiu para **${fmt(c.leitura)} V**! Ela puxa corrente demais do divisor. Experimente uma carga de resistência **maior**.` };
+    },
+    aoConcluir(c) {
+      const { baixo } = ladosDoDivisor(c);
+      const carga = baixo.reduce((a, r) => (r.peca.valor > a.peca.valor ? r : a));
+      return { cargaV: fmt(c.leitura), cargaR: Arte.ohms(carga.peca.valor) };
+    },
+    sucesso: 'Com a carga de **{cargaR}**, a saída ficou em **{cargaV} V**, quase igual aos {divisorV} V sem carga. Quando a carga é bem maior que o resistor de Thévenin, o divisor quase nem sente que ela está ali.',
+  },
+
   // ---------------------------------------------------------------- oficina de motores
   'liga-motor': {
     titulo: 'Ligue o motor',
@@ -307,7 +452,7 @@ function dicaAutomatica(c, desafio) {
       return { tipo: 'aviso', texto: `${c.nomePeca(p)} está com as duas pernas no mesmo grupo de furos. Assim ele fica “em curto” e a corrente nem passa por ele. Coloque cada perna em uma coluna diferente.` };
     }
   }
-  if (!c.ligada) return desafio && desafio.dicaAoVivo && c.arduino ? desafio.dicaAoVivo(c) : null;
+  if (!c.ligada) return desafio && desafio.dicaAoVivo && (c.arduino || desafio.semFonte) ? desafio.dicaAoVivo(c) : null;
   const r = c.res;
   if (r.curto) return { tipo: 'erro', texto: `**Curto-circuito!** Tem um fio ligando o + direto no −, sem nada no meio. ${c.arduino ? 'O Arduino desligou para se proteger.' : 'A fonte entrou em proteção.'} Remova esse fio!` };
   if (r.curtoPino) return { tipo: 'erro', texto: `**Curto no pino ${r.curtoPino.slice(1)}!** Ele está ligado direto no GND (ou no 5V), sem nada no meio. Remova esse fio antes que o pino estrague.` };

@@ -65,6 +65,7 @@ const Bancada = (() => {
   let config = null;
   let pecas = [];
   let sondas = { v: null, p: null };
+  let modoMM = 'V';           // seletor do multímetro: 'V' (tensão) ou 'Ω' (resistência)
   let ligada = false;
   let resultado = null;
   let ferramenta = null;      // { tipo, valor?, cor?, qual? }
@@ -328,29 +329,47 @@ const Bancada = (() => {
   }
 
   // ---------------------------------------------------------------- multímetro
+  // no V⎓: volts (com a fonte ligada); no Ω: ohms, só com a fonte desligada (Infinity = sem caminho)
   function leituraMultimetro() {
     if (!sondas.v || !sondas.p) return null;
+    if (modoMM === 'Ω') return energizada() ? null : Simulador.resistencia(pecas, noBase, sondas.v, sondas.p);
     if (!resultado || resultado.curto) return 0;
     return resultado.tensao(sondas.v) - resultado.tensao(sondas.p);
+  }
+
+  // [número, unidade] do visor
+  function visor(leitura) {
+    if (leitura === null) return ['- - -', modoMM];
+    if (modoMM === 'V') return [Math.abs(leitura) < 0.005 ? '0.00' : leitura.toFixed(2), 'V'];
+    if (leitura === Infinity) return ['OL', 'Ω'];
+    if (leitura >= 1e6) return [(leitura / 1e6).toFixed(2), 'MΩ'];
+    if (leitura >= 1000) return [(leitura / 1000).toFixed(2), 'kΩ'];
+    return [leitura.toFixed(leitura < 100 ? 1 : 0), 'Ω'];
   }
 
   function desenharMultimetro() {
     if (!config || !config.gaveta.multimetro) { camadas.multimetro.innerHTML = ''; camadas.sondas.innerHTML = ''; return; }
     const X = MM_X, Y0 = 96;
-    const leitura = leituraMultimetro();
-    const txt = leitura === null ? '- - -' : (Math.abs(leitura) < 0.005 ? '0.00' : leitura.toFixed(2));
+    const [txt, unidade] = visor(leituraMultimetro());
+    const longa = unidade.length > 1;
     const com = { x: X + 52, y: Y0 + 252 }, vo = { x: X + 112, y: Y0 + 252 };
+    // com seletor: clicar na rodinha gira entre V⎓ e Ω
+    const seletor = config.gaveta.multimetro === 'seletor';
+    const ohm = modoMM === 'Ω';
     camadas.multimetro.innerHTML = `
       <text x="${X + 82}" y="${Y0 - 10}" font-size="13" font-weight="800" fill="#cfc8da" text-anchor="middle" letter-spacing="1">MULTÍMETRO</text>
       <rect x="${X}" y="${Y0}" width="164" height="286" rx="22" fill="#f07a2a"/>
       <rect x="${X + 12}" y="${Y0 + 12}" width="140" height="262" rx="15" fill="#3a3a42"/>
       <rect x="${X + 22}" y="${Y0 + 24}" width="120" height="58" rx="6" fill="#cfe0c8"/>
-      <text x="${X + 116}" y="${Y0 + 66}" font-size="30" font-family="ui-monospace,Consolas,monospace" font-weight="700" fill="#1f2a1c" text-anchor="end">${txt}</text>
-      <text x="${X + 136}" y="${Y0 + 66}" font-size="15" font-weight="800" fill="#1f2a1c" text-anchor="end">V</text>
-      <circle cx="${X + 82}" cy="${Y0 + 160}" r="36" fill="#5a5a64" stroke="#2b2b31" stroke-width="4"/>
-      <path d="M${X + 82} ${Y0 + 160} L${X + 56} ${Y0 + 134}" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
-      <text x="${X + 44}" y="${Y0 + 120}" font-size="16" font-weight="800" fill="#ffd23f" text-anchor="middle">V⎓</text>
-      <text x="${X + 128}" y="${Y0 + 120}" font-size="14" fill="#ccc" text-anchor="middle">Ω</text>
+      <text x="${X + (longa ? 108 : 116)}" y="${Y0 + 66}" font-size="30" font-family="ui-monospace,Consolas,monospace" font-weight="700" fill="#1f2a1c" text-anchor="end">${txt}</text>
+      <text x="${X + (longa ? 139 : 136)}" y="${Y0 + 66}" font-size="${longa ? 13 : 15}" font-weight="800" fill="#1f2a1c" text-anchor="end">${unidade}</text>
+      <g id="mm-seletor"${seletor ? ' style="cursor:pointer"' : ''}>${seletor ? '<title>Girar o seletor (V⎓ ou Ω)</title>' : ''}
+        <rect x="${X + 24}" y="${Y0 + 100}" width="116" height="100" fill="transparent"/>
+        <circle cx="${X + 82}" cy="${Y0 + 160}" r="36" fill="#5a5a64" stroke="${seletor ? '#ffd23f' : '#2b2b31'}" stroke-width="4"/>
+        <path d="M${X + 82} ${Y0 + 160} L${X + (ohm ? 108 : 56)} ${Y0 + 134}" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+        <text x="${X + 44}" y="${Y0 + 120}" font-size="${ohm ? 14 : 16}" font-weight="${ohm ? 400 : 800}" fill="${ohm ? '#ccc' : '#ffd23f'}" text-anchor="middle">V⎓</text>
+        <text x="${X + 128}" y="${Y0 + 120}" font-size="${ohm ? 16 : 14}" font-weight="${ohm ? 800 : 400}" fill="${ohm ? '#ffd23f' : '#ccc'}" text-anchor="middle">Ω</text>
+      </g>
       <text x="${X + 82}" y="${Y0 + 216}" font-size="12" fill="#ccc" text-anchor="middle">A</text>
       <circle cx="${com.x}" cy="${com.y}" r="10" fill="#111" stroke="#777" stroke-width="2"/>
       <circle cx="${vo.x}" cy="${vo.y}" r="10" fill="#d62828"/>
@@ -474,6 +493,7 @@ const Bancada = (() => {
       t = 'Peça selecionada: “Remover” tira da placa e “Inverter” troca as pernas de lado.';
     } else {
       t = 'Escolha um componente na gaveta. Passe o mouse (ou toque) nos furos para ver quais estão conectados.';
+      if (config && config.gaveta.multimetro === 'seletor') t += ' Clique no seletor do multímetro para trocar entre V⎓ e Ω.';
     }
     el.instrucao.textContent = t;
   }
@@ -517,6 +537,7 @@ const Bancada = (() => {
       pecas, sondas, ligada: energizada(), res: resultado,
       arduino: modoArduino ? { rodando: Arduino.rodando, programa: Arduino.programa, pinos: Arduino.pinos, piscadas, bipes } : null,
       leitura: leituraMultimetro(),
+      modo: modoMM,
       // as duas pernas no mesmo grupo de furos (mesma coluna ou mesma trilha)?
       mesmaColuna: p => noBase(p.a) === noBase(p.b),
       // nó elétrico do furo (considera os fios); só faz sentido com a fonte ligada
@@ -602,6 +623,12 @@ const Bancada = (() => {
     mudou();
   }
 
+  function girarSeletor() {
+    modoMM = modoMM === 'V' ? 'Ω' : 'V';
+    som('clique');
+    mudou();
+  }
+
   // ---------------------------------------------------------------- eventos
   function pontoSVG(ev) {
     const pt = svg.createSVGPoint();
@@ -629,6 +656,7 @@ const Bancada = (() => {
 
   function aoClicar(ev) {
     if (ev.target.closest('#fonte-botao')) { alternarFonte(); return; }
+    if (ev.target.closest('#mm-seletor') && config.gaveta.multimetro === 'seletor') { girarSeletor(); return; }
     const furo = furoMaisProximo(pontoSVG(ev));
     if (ferramenta) { if (furo) usarFerramenta(furo); return; }
     const pecaEl = ev.target.closest('[data-peca]');
@@ -679,12 +707,14 @@ const Bancada = (() => {
   }
 
   // ---------------------------------------------------------------- API
-  // cfg: { gaveta: {resistores, leds, buzzer, motor, fios, multimetro, arduino, comandos}, manterMontagem, aoMudar(ctx) }
+  // cfg: { gaveta: {resistores, leds, buzzer, motor, fios, multimetro (true ou 'seletor'), arduino, comandos}, manterMontagem, aoMudar(ctx) }
   function iniciar(cfg) {
     preparar();
     config = cfg;
     modoArduino = !!cfg.gaveta.arduino;
     if (!cfg.manterMontagem) { pecas = []; sondas = { v: null, p: null }; historico = []; ligada = false; }
+    // sem seletor o multímetro só mede tensão; com seletor, ele fica onde a participante deixou
+    if (cfg.gaveta.multimetro !== 'seletor') modoMM = 'V';
     ferramenta = null; primeiro = null; selecionada = null; hover = null;
     piscadas = {}; bipes = {}; antes = {};
     svg.setAttribute('viewBox', `0 0 ${cfg.gaveta.multimetro ? W : BX + LARG + 16} ${H}`);

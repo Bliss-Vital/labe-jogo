@@ -20,12 +20,19 @@ O que cada oficina ensina, quem conduz e quais são os desafios está em [`CONTE
 3. **Protoboard e o primeiro LED**: como os furos se conectam, polaridade do LED, primeiro circuito.
 4. **Série e paralelo**: dois LEDs de cada jeito, na bancada.
 5. **Medindo com o multímetro**: medir a tensão no LED e no resistor e calcular a corrente.
-6. **Motores elétricos**: a equipe de robótica Project Neon se apresenta; como o motor CC funciona
+6. **Circuitos equivalentes**: o ohmímetro (seletor em Ω), resistência equivalente em série e em
+   paralelo, divisor de tensão e equivalente de Thévenin, com uma carga ligada no divisor. Baseada no
+   capítulo 1 do livro *A Arte da Eletrônica*.
+7. **Motores elétricos**: a equipe de robótica Project Neon se apresenta; como o motor CC funciona
    (ímãs, bobina e comutador), ligar o motor, inverter o sentido do giro, deixar ele mais devagar com
    um resistor em série e o **minijogo do PWM** (segurar o botão liga o motor, soltar desliga: com
    toques no ritmo certo, a jogadora controla a velocidade do carrinho).
-7. **Arduino: primeiros passos**: o que é o Arduino, pinout, `setup()` e `loop()`, e as práticas
+8. **Arduino: primeiros passos**: o que é o Arduino, pinout, `setup()` e `loop()`, e as práticas
    *pisca LED* (pino 13) e *ativando o buzzer* (pino 8), com código montado em blocos.
+9. **Chefão final: o osciloscópio**: o osciloscópio aparece como chefão, com uma barra de vida que cai
+   a cada acerto. A jogadora aprende a tela (tensão × tempo), a ponta de prova e os botões VOLTS/DIV,
+   TEMPO/DIV e TRIGGER girando cada um num **minijogo do osciloscópio**, mede Vpp, período e
+   frequência, e no golpe final enxerga o PWM do Arduino.
 
 Ao concluir tudo, aparece um certificado de conclusão do jogo com o nome da participante.
 
@@ -47,6 +54,7 @@ as oficinas ficam liberadas neste navegador até alguém entrar com outro nome o
 | Cenários e ilustrações das aulas | `js/arte.js` |
 | Comandos do Arduino e o editor em blocos | `js/arduino.js` |
 | Minijogo do PWM (inércia do carrinho, faixa da meta) | `js/pwm.js` |
+| Minijogo do osciloscópio (botões, sinal do gerador, quando a rodada conta como "certa") | `js/osciloscopio.js` |
 | Cores e visual | `css/estilo.css` |
 | Física do circuito (tensão da fonte, LEDs) | `js/simulador.js` |
 
@@ -83,8 +91,9 @@ e `img/monitoras.png`. O jogo descobre sozinho quantas personagens existem.
 ## Testes
 
 Abra `testes/simulador.html` no navegador: ele confere o simulador (LED acende com ~13,8 mA, queima
-sem resistor, curto-circuito, série, paralelo, multímetro, motor, Arduino), o minijogo do PWM e o
-roteiro (todo nome, desafio e ilustração usados existem), e mostra quantos testes passaram.
+sem resistor, curto-circuito, série, paralelo, multímetro, ohmímetro, divisor de tensão, motor,
+Arduino), os minijogos do PWM e do osciloscópio e o roteiro (todo nome, desafio e ilustração usados
+existem), e mostra quantos testes passaram.
 
 ## Publicar na internet
 
