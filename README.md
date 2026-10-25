@@ -12,6 +12,7 @@ gira mais rápido ou mais devagar conforme a tensão, no sentido que a corrente 
 <https://claude.ai/artifact/NtjfM2VXytDxKJUL2JiBXj>)
 
 O que cada oficina ensina, quem conduz e quais são os desafios está em [`CONTEUDO.md`](CONTEUDO.md).
+O que mudou em cada versão do jogo está em [`MUDANCAS.md`](MUDANCAS.md).
 
 ## Oficinas
 
